@@ -11,4 +11,7 @@ def test_dashboard_gold_and_silver():
     assert len(app.tabs) == 5
     app.sidebar.selectbox[0].select("Plata").run()
     assert not app.exception
-    assert any("Promedio mensual" in metric.label for metric in app.metric)
+    text = "\n".join(item.value for item in app.markdown)
+    assert "Plata · tendencia mensual" in text
+    assert "Noticias de plata" in text
+    assert "Sin dato" in text or "Sentimiento reciente" in text

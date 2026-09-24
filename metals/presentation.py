@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 from html import escape
-from .news_filter import filter_news
+from .news_filter import filter_news, matched_metals
 
 GOLD = "#BE8C16"
 SILVER = "#2873AF"
@@ -94,6 +94,15 @@ def summary_card(label, value, note="", tone=""):
                 f'<div class="card-value">{escape(str(value))}</div><div class="card-note">{escape(str(note))}</div></div>', unsafe_allow_html=True)
 
 
+def publisher_name(source):
+    return str(source).replace(" — Gold RSS", "").replace(" — Silver RSS", "")
+
+
+def topic_label(title, summary):
+    metals = matched_metals(title, summary)
+    return "Oro y plata" if len(metals) == 2 else "Oro" if "gold" in metals else "Plata"
+
+
 def news_cards(articles, limit=3):
     if articles.empty:
         st.info("Sin noticias específicas de este metal en la base local.")
@@ -105,5 +114,5 @@ def news_cards(articles, limit=3):
         else:
             tone = "Positivo" if item["score"] > 0 else "Negativo" if item["score"] < 0 else "Neutral"
         st.markdown(f'<div class="news-card"><a href="{escape(item["url"], quote=True)}" target="_blank" rel="noopener noreferrer">{escape(item["title"])}</a>'
-                    f'<div class="news-meta">{escape(item["source"])} · {escape(item["published_at"][:10])}</div>'
+                    f'<div class="news-meta">{escape(publisher_name(item["source"]))} · {escape(item["published_at"][:10])} · {topic_label(item["title"], item["summary"])}</div>'
                     f'<span class="tone">{tone}</span></div>', unsafe_allow_html=True)

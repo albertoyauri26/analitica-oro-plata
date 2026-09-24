@@ -21,7 +21,7 @@ Desde la terminal de VS Code, situada en la raíz del proyecto:
 .\.venv\Scripts\python.exe scripts/package_space.py --target docente --include-data
 ```
 
-Si `predict` informa que cambió el dataset, ejecuta `train` y luego `predict` antes de empaquetar. Si quieres entregar noticias adicionales analizadas, ejecuta primero `sentiment --limit 5` y reconstruye los resultados.
+Si `predict` informa que cambió el dataset, ejecuta `train` y luego `predict` antes de empaquetar. Si quieres entregar noticias adicionales analizadas, ejecuta primero `news-refresh --per-metal 5 --analyze` y reconstruye los resultados.
 
 El programa muestra el nombre del ZIP creado en `dist`. Incluye los datos reales guardados en SQLite, los modelos, los reportes, las noticias y los resultados de sentimiento. También incluye el código y las guías para que el docente pueda revisar el trabajo.
 
@@ -62,7 +62,7 @@ No ejecutes `run` para la primera demostración si deseas conservar exactamente 
 
 | Acción | Resultado esperado |
 |---|---|
-| Abrir la página | Título del proyecto y tarjetas de precio/fecha/tendencia/riesgo |
+| Abrir la página | Título del proyecto y tarjetas de precios, inflación y tasa Fed |
 | Cambiar Oro por Plata | Cambian precios, métricas y señal |
 | Descriptivo | Serie de precios, media móvil, retornos, comparación y macro |
 | Predictivo | Mes objetivo, probabilidades, baselines, matriz de confusión y validación |
@@ -80,7 +80,7 @@ Los análisis Gemini ya guardados se consultan sin clave. Para generar nuevos an
 
 ```powershell
 .\.venv\Scripts\python.exe -m metals.cli gemini-check
-.\.venv\Scripts\python.exe -m metals.cli sentiment --limit 2
+.\.venv\Scripts\python.exe -m metals.cli news-refresh --per-metal 5 --analyze
 ```
 
 No es necesario compartir tu clave para presentar el proyecto. El nombre del modelo puede cambiar; el diagnóstico informa disponibilidad y el análisis informa errores de servicio sin mostrar la credencial.

@@ -49,7 +49,7 @@ Los comandos usan la ruta completa de Python para funcionar aunque PowerShell bl
 .\.venv\Scripts\python.exe -m metals.cli status
 ```
 
-La ingesta descarga Pink Sheet, cuatro CSV de FRED y los canales RSS configurados de economía y minería. Para noticias específicas de oro/plata también hay una selección de títulos verificados importable por CSV, explicada en la guía de fuentes. Cada resultado informa su cantidad de registros o su error. `data/raw` conserva los originales. `data/metals.sqlite` almacena las tablas normalizadas.
+La ingesta descarga Pink Sheet, cuatro CSV de FRED y los canales RSS configurados. Las noticias pasan un filtro de oro/plata y se añaden fuentes RSS especializadas para seleccionar hasta cinco por metal. Cada resultado informa su cantidad de registros o su error. `data/raw` conserva los originales. `data/metals.sqlite` almacena las tablas normalizadas. Consulta `11_NOTICIAS_Y_SENTIMIENTO.md` para completar el análisis Gemini.
 
 Comprueba que `prices` y `macro` tengan registros y fechas razonables. Si las noticias fallan, puedes continuar con el modelo base. Si falta una serie macro requerida, revisa el registro: el entrenamiento no debe ocultar ese problema. En el documento de fuentes encontrarás la importación manual.
 

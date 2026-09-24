@@ -17,8 +17,13 @@ def main():
     sub.add_parser("run", help="Ejecutar ingesta, dataset, entrenamiento y predicción")
     sub.add_parser("status", help="Consultar cobertura almacenada")
     sub.add_parser("gemini-check", help="Verificar credencial y modelos disponibles sin mostrar la clave")
+    news_refresh = sub.add_parser("news-refresh", help="Recopilar noticias específicas por metal; opcionalmente analizarlas")
+    news_refresh.add_argument("--per-metal", type=int, default=5, choices=range(1, 21), metavar="1-20")
+    news_refresh.add_argument("--analyze", action="store_true", help="Analizar el lote con Gemini (consume tu cuota)")
     sentiment = sub.add_parser("sentiment", help="Analizar noticias con Gemini (usa tu cuota)")
-    sentiment.add_argument("--limit", type=int, default=5, choices=range(1, 101), metavar="1-100")
+    news_quantity = sentiment.add_mutually_exclusive_group()
+    news_quantity.add_argument("--limit", type=int, choices=range(1, 101), metavar="1-100", help="Límite total de artículos pendientes, modo manual")
+    news_quantity.add_argument("--per-metal", type=int, choices=range(1, 21), metavar="1-20", help="Por defecto: 5 por cada metal")
     sentiment.add_argument("--source", help="Opcional: Federal Reserve, Mining Weekly u otra fuente guardada")
     imp = sub.add_parser("import-production", help="Importar producción anual verificada")
     imp.add_argument("path")
@@ -52,7 +57,19 @@ def main():
             print(f"Noticias importadas: {import_news(conn, args.path)}")
         if args.command == "sentiment":
             from .sentiment import analyze
-            print(f"Noticias analizadas: {analyze(conn, args.limit, args.source)}")
+            print(f"Noticias analizadas: {analyze(conn, args.limit or 5, args.source, per_metal=None if args.limit else args.per_metal or 5)}")
+        if args.command == "news-refresh":
+            from .news_sources import fetch_targeted_news
+            from .storage import upsert, log
+            rows, diagnostics = fetch_targeted_news(per_metal=args.per_metal)
+            upsert(conn, "news", rows)
+            print(json.dumps(diagnostics, ensure_ascii=False, indent=2))
+            log(conn, "Noticias por metal", "ok" if rows else "empty", len(rows), json.dumps(diagnostics, ensure_ascii=False)[:1500])
+            for result in diagnostics["sources"]:
+                log(conn, result["source"], result["status"], result["rows"], result["detail"], result["sha256"])
+            if args.analyze:
+                from .sentiment import analyze
+                print(f"Noticias analizadas: {analyze(conn, per_metal=args.per_metal)}")
         if args.command in {"build", "train", "predict", "run"}:
             from .features import build_dataset
             dataset = build_dataset(conn)
@@ -64,8 +81,10 @@ def main():
                 print(f"{metal}: macro-F1 holdout = {report['xgboost']['macro_f1']:.3f}")
         if args.command in {"predict", "run"}:
             from .decision import predict
+            from .news_context import snapshot
             for metal in ("gold", "silver"):
-                print(json.dumps(predict(dataset, metal), indent=2, ensure_ascii=False))
+                context = snapshot(read(conn, "news"), read(conn, "sentiment"), metal)
+                print(json.dumps(predict(dataset, metal, news_context=context), indent=2, ensure_ascii=False))
         if args.command == "status":
             for table in ("prices", "macro", "news", "sentiment", "production"):
                 frame = read(conn, table)

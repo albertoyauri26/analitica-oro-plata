@@ -8,8 +8,9 @@ from metals.config import ARTIFACTS, ROOT, LABELS, THRESHOLDS, CORE_FEATURES
 from metals.storage import connect, read
 from metals.features import build_dataset, technical
 from metals.decision import predict
-from metals.presentation import style, chart, sentiment_view, summary_card, news_cards, COLORS, GOLD, SILVER, GREEN, RED
+from metals.presentation import style, chart, sentiment_view, summary_card, news_cards, publisher_name, topic_label, COLORS, GOLD, SILVER, GREEN, RED
 from metals.news_filter import filter_news
+from metals.news_context import snapshot as news_snapshot
 
 st.set_page_config(page_title="Aurum | Oro y plata", page_icon="◈", layout="wide")
 style()
@@ -68,13 +69,14 @@ start = part.date.max() - pd.DateOffset(years=year_count)
 visible = part[part.date >= start]
 recent_return = history.pct_change(fill_method=None).iloc[-1]
 article_view = sentiment_view(news, sentiment, metal)
-recent_articles = article_view[pd.to_datetime(article_view.published_at, utc=True, format="ISO8601") >= pd.Timestamp.now(tz="UTC") - pd.Timedelta(days=31)] if not article_view.empty else article_view
+news_context = news_snapshot(news, sentiment, metal)
+recent_articles = article_view[article_view.id.isin(news_context["news_ids"])] if not article_view.empty else article_view
 report_path = ARTIFACTS / metal / "report.json"
 report = json.loads(report_path.read_text(encoding="utf-8")) if report_path.exists() else None
 prediction, prediction_error = None, None
 if report and dataset is not None:
     try:
-        prediction = predict(dataset, metal, save=False)
+        prediction = predict(dataset, metal, save=False, news_context=news_context)
     except (ValueError, FileNotFoundError) as exc:
         prediction_error = str(exc)
 
@@ -127,7 +129,7 @@ with tabs[0]:
     with right:
         with st.container(border=True):
             st.markdown(f"#### Noticias de {metal_label.lower()}")
-            news_cards(article_view)
+            news_cards(recent_articles)
     left, right = st.columns(2)
     with left:
         returns = history.pct_change(fill_method=None).tail(12)
@@ -195,6 +197,8 @@ with tabs[1]:
                 st.write(f"Sentimiento reciente: **{current_scores.score.mean():+.2f}** · {len(current_scores)} noticias relevantes analizadas.")
             else:
                 st.write("Sentimiento reciente: **Sin dato**. No se asigna un cero a las noticias pendientes.")
+            st.write(f"Lote reciente: **{news_context['selected']}/5** noticias · **{news_context['analyzed']}** analizadas · **{news_context['pending']}** pendientes.")
+            st.info(prediction["news_reading"])
             st.caption("Las noticias se integran al dataset a partir de su disponibilidad. El entrenamiento admite esta variable solo con cobertura suficiente; los análisis posteriores al origen no modifican retroactivamente esta predicción.")
     else:
         st.info("Entrena y ejecuta predict desde la terminal para obtener el resultado.")
@@ -204,7 +208,8 @@ with tabs[1]:
         comparison = pd.DataFrame({"XGBoost": report["xgboost"], "Clase mayoritaria": report["baseline_majority"], "Persistencia": report["baseline_persistence"]}).T
         left, right = st.columns([1.2, 1])
         with left:
-            table = comparison[["macro_f1", "balanced_accuracy", "accuracy"]].rename(columns={"macro_f1": "Macro-F1", "balanced_accuracy": "Exactitud balanceada", "accuracy": "Exactitud"})
+            metric_columns = [c for c in ("macro_f1", "macro_precision", "macro_recall", "accuracy") if c in comparison]
+            table = comparison[metric_columns].rename(columns={"macro_f1": "Macro-F1", "macro_precision": "Precisión macro", "macro_recall": "Recall macro", "accuracy": "Exactitud"})
             st.dataframe(table.style.format("{:.3f}"), width="stretch")
             st.caption("Macro-F1 considera las tres clases. Comparar con reglas sencillas permite valorar si el modelo añade capacidad predictiva.")
             if report["xgboost"]["macro_f1"] <= max(report["baseline_majority"]["macro_f1"], report["baseline_persistence"]["macro_f1"]):
@@ -221,22 +226,34 @@ with tabs[1]:
             chart(px.bar(x=importance.values, y=importance.index, orientation="h", labels={"x": "Importancia interna", "y": ""}, title="Variables más utilizadas"), 340)
             st.caption("Importancia interna del modelo evaluado; no demuestra causalidad.")
         with right:
-            best = max(report["cv_trials"], key=lambda x: x["mean_macro_f1"])
+            best = next(t for t in report["cv_trials"] if t["params"] == report["best_params"] and t.get("weighting", "uniform") == report.get("best_weighting", "uniform"))
             folds = pd.DataFrame(best["folds"])
             folds["Bloque"] = [f"Bloque {i + 1}" for i in range(len(folds))]
             chart(px.bar(folds, x="Bloque", y="macro_f1", title="Validación temporal · modelo seleccionado", labels={"macro_f1": "Macro-F1"}, range_y=[0, 1]), 340)
         with st.expander("Detalles del experimento"):
-            st.json({"parámetros": report["best_params"], "log_loss": report["xgboost"]["log_loss"], "Brier multiclase": report["xgboost"]["multiclass_brier"], "variables de contexto excluidas": report["excluded_context"], "entrenamiento final": report["final_train"]})
+            st.json({"parámetros": report["best_params"], "ponderación": report.get("best_weighting", "uniform"), "selección": report.get("selection", {}), "log_loss": report["xgboost"]["log_loss"], "Brier multiclase": report["xgboost"]["multiclass_brier"], "variables de contexto excluidas": report["excluded_context"], "entrenamiento final": report["final_train"]})
             st.caption("El modelo final se reentrena después de la evaluación. Las métricas del holdout corresponden al modelo evaluado, exportado por separado.")
+        st.caption("Este periodo de prueba ya fue examinado en versiones previas: la comparación es retrospectiva y necesita validación prospectiva con nuevos meses.")
         st.download_button("Descargar reporte de evaluación", report_path.read_bytes(), f"{metal}_report.json", "application/json")
 
 with tabs[2]:
-    st.subheader("De la predicción a una señal orientativa")
+    st.subheader("Dashboard — Prescriptivo")
     if prediction:
-        with st.container(border=True):
-            st.markdown(f"### {prediction['signal']}")
-            st.write(f"Riesgo: **{prediction['risk']}** · Mes objetivo: **{prediction['target_month'][:7]}**")
-            st.caption("La señal combina desempeño histórico, probabilidad, vigencia y reglas de riesgo.")
+        a, b, c = st.columns([1, 1.5, 1])
+        with a:
+            summary_card(f"{metal_label} · USD / oz troy", f"US$ {last.price:,.2f}", f"{recent_return:+.1%} mensual · {last.date:%Y-%m}", metal)
+        with b:
+            summary_card("Señal orientativa", prediction["signal"], f"Mes objetivo {prediction['target_month'][:7]}", "caution" if prediction["signal"] == "Abstenerse" or prediction["risk"] == "Alto" else "")
+        with c:
+            summary_card(f"Tendencia: {prediction['trend']}", f"Riesgo {prediction['risk'].lower()}", f"Probabilidad máxima {prediction['max_probability']:.1%}")
+        st.markdown("#### Escenarios de clasificación")
+        scenario_cols = st.columns(3)
+        lower, upper = last.price * (1 - THRESHOLDS[metal]), last.price * (1 + THRESHOLDS[metal])
+        limits = {"Alcista": f"Promedio mensual > US$ {upper:,.2f}", "Neutral": f"Entre US$ {lower:,.2f} y US$ {upper:,.2f}", "Bajista": f"Promedio mensual < US$ {lower:,.2f}"}
+        for col, label, tone in zip(scenario_cols, ("Alcista", "Neutral", "Bajista"), ("positive", "", "negative")):
+            with col:
+                summary_card(label, f"{prediction['probabilities'][label]:.1%}", limits[label], tone)
+        st.caption(f"Límites de clase con ±{THRESHOLDS[metal]:.0%} sobre el promedio de {last.date:%Y-%m}. No son precios objetivo estimados ni órdenes de compra/venta.")
         left, right = st.columns([1.4, 1])
         with left:
             st.markdown("#### Razones de esta salida")
@@ -256,7 +273,7 @@ with tabs[2]:
 
 with tabs[3]:
     st.subheader("Sentimiento de noticias con Gemini")
-    st.caption("Texto real de fuentes económicas y mineras. El score refleja la interpretación de Gemini respecto al metal seleccionado.")
+    st.caption(f"Solo artículos que mencionan {metal_label.lower()} en contexto de mercado o minería. Gemini confirma la relevancia y evalúa el tono; el filtro temático no asigna sentimiento.")
     gemini_log = logs[logs.source.str.startswith("Gemini", na=False)].sort_values("id")
     if len(gemini_log) and gemini_log.iloc[-1].status == "error":
         last_error = str(gemini_log.iloc[-1].detail)
@@ -264,14 +281,14 @@ with tabs[3]:
             st.warning("Último intento: Google informó cuota agotada (HTTP 429). Los análisis completados se conservan; las noticias pendientes requieren cuota disponible.")
         elif "503" in last_error:
             st.info("Último intento: Gemini informó saturación temporal (HTTP 503). Se conservan los análisis completados.")
-    article_view = sentiment_view(news, sentiment, metal)
+    article_view = recent_articles
     if not article_view.empty:
         recent_mask = pd.to_datetime(article_view.published_at, utc=True, format="ISO8601") >= pd.Timestamp.now(tz="UTC") - pd.Timedelta(days=31)
         recent = article_view[recent_mask]
         scored = recent[(recent.relevant == 1) & recent.score.notna()]
         evaluated = recent[recent.analyzed_at.notna()]
         s1, s2, s3 = st.columns(3)
-        s1.metric("Noticias recientes", len(recent))
+        s1.metric("Noticias seleccionadas", f"{len(recent)} / 5")
         s2.metric("Analizadas para este metal", len(evaluated))
         s3.metric("Sentimiento relevante medio", f"{scored.score.mean():+.2f}" if len(scored) else "Sin dato", help="Media de noticias relevantes de los últimos 31 días. -1 desfavorable; 0 neutro; +1 favorable. No representa una probabilidad.")
         if len(scored):
@@ -282,6 +299,8 @@ with tabs[3]:
         else:
             st.info("No hay sentimiento relevante disponible en esta ventana. Una noticia pendiente o no relevante no se convierte en Neutral.")
         st.caption("El contexto recién analizado no se añade a una predicción con origen anterior. Su inclusión en XGBoost exige cobertura histórica suficiente y fechas compatibles.")
+        if news_context["missing_articles"]:
+            st.info(f"Faltan {news_context['missing_articles']} artículos específicos recientes para completar el lote de cinco. No se rellena con noticias de otros temas.")
         mode = st.radio("Mostrar noticias", ["Todas", "Analizadas con Gemini", "Pendientes"], horizontal=True)
         display = article_view
         if mode == "Analizadas con Gemini":
@@ -289,7 +308,7 @@ with tabs[3]:
         elif mode == "Pendientes":
             display = display[display.analyzed_at.isna()]
         for item in display.head(20).to_dict("records"):
-            with st.expander(f"{item['published_at'][:10]} · {item['source']} · {item['title']}"):
+            with st.expander(f"{item['published_at'][:10]} · {publisher_name(item['source'])} · {topic_label(item['title'], item['summary'])} · {item['title']}"):
                 st.write(item["summary"])
                 st.link_button("Leer fuente original", item["url"])
                 if pd.notna(item.get("analyzed_at")):
@@ -306,10 +325,11 @@ with tabs[3]:
         export_cols = ["title", "url", "source", "published_at", "relevant", "score", "explanation", "evidence", "model", "analyzed_at"]
         st.download_button("Descargar noticias y sentimiento", article_view[export_cols].to_csv(index=False).encode("utf-8-sig"), f"{metal}_sentiment.csv", "text/csv")
     else:
-        st.info("No hay noticias guardadas. Ejecuta la ingesta.")
+        st.info(f"No hay noticias específicas de {metal_label.lower()} guardadas. Ejecuta la ingesta o importa artículos verificados.")
     with st.expander("Ejecutar Gemini desde Visual Studio Code"):
         st.code(r".\.venv\Scripts\python.exe -m metals.cli gemini-check", language="powershell")
-        st.code(r".\.venv\Scripts\python.exe -m metals.cli sentiment --limit 5", language="powershell")
+        st.code(r".\.venv\Scripts\python.exe -m metals.cli news-refresh --per-metal 5 --analyze", language="powershell")
+        st.caption("Descarga artículos específicos, selecciona hasta cinco por metal y reutiliza análisis ya guardados. Una noticia que trata ambos metales se consulta una sola vez.")
         st.caption("La clave se configura únicamente en .env. La web no la muestra ni hace llamadas de pago.")
     st.subheader("Contexto de producción minera")
     if production.empty:
@@ -330,6 +350,7 @@ with tabs[4]:
             st.dataframe((m.isna().mean() * 100).rename("Porcentaje ausente").round(1), width="stretch")
         st.download_button("Descargar dataset analítico", dataset.to_csv(index=False).encode("utf-8-sig"), "analytical_dataset.csv", "text/csv")
     with st.expander("Registro de fuentes y descargas"):
+        st.caption(f"Noticias admitidas por tema: {len(news)}. Registros antiguos fuera del tema: {archived_news_count}; conservados para auditoría y excluidos de la app, Gemini y variables predictivas.")
         st.dataframe(logs.sort_values("id", ascending=False).head(30), width="stretch", hide_index=True)
     st.warning("Evaluación retrospectiva con series revisadas. Los rezagos no sustituyen un archivo histórico de publicaciones y versiones.")
     with st.expander("Metodología completa"):

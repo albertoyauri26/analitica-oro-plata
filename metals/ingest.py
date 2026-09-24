@@ -198,6 +198,15 @@ def ingest_all(conn):
     jobs = [("World Bank", lambda: market(conn))]
     jobs += [(key, lambda key=key: macro(conn, key)) for key in SERIES]
     jobs += [(name, lambda name=name, url=url: news(conn, name, url)) for name, url in FEEDS.items()]
+    def targeted():
+        from .news_sources import fetch_targeted_news
+        rows, diagnostics = fetch_targeted_news(per_metal=5)
+        upsert(conn, "news", rows)
+        for item in diagnostics["sources"]:
+            log(conn, item["source"], item["status"], item["rows"], item["detail"], item["sha256"])
+        log(conn, "Lote por metal", "ok" if rows else "empty", len(rows), str(diagnostics["coverage"]))
+        return len(rows)
+    jobs.append(("Noticias específicas oro/plata", targeted))
     for name, job in jobs:
         try:
             count = job()

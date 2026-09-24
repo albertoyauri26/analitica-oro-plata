@@ -10,7 +10,8 @@ from dotenv import load_dotenv
 from pydantic import BaseModel, Field, ConfigDict
 from .config import ROOT
 from .storage import read, upsert, now, log
-from .news_filter import filter_news, matched_metals
+from .news_filter import filter_news, matched_metals, select_news_batch
+import pandas as pd
 
 PROMPT_VERSION = "metals-v1"
 
@@ -72,14 +73,30 @@ def validate_response(text, source_text):
             raise ValueError("La evidencia de Gemini no coincide con el texto de entrada.")
     return parsed
 
-def analyze(conn, limit=5, source=None):
+def analyze(conn, limit=5, source=None, per_metal=None):
     key, model = configuration()
     articles, previous = read(conn, "news"), read(conn, "sentiment")
     articles = filter_news(articles)
     if source:
         articles = articles[articles.source == source]
-    done = set(previous[(previous.model == model) & (previous.prompt_version == PROMPT_VERSION)].news_id)
-    articles = articles[~articles.id.isin(done)].sort_values("published_at", ascending=False).head(limit)
+    done = set(zip(previous.loc[(previous.model == model) & (previous.prompt_version == PROMPT_VERSION), "news_id"],
+                   previous.loc[(previous.model == model) & (previous.prompt_version == PROMPT_VERSION), "metal"]))
+    targets = {}
+    if per_metal is not None:
+        batches = select_news_batch(articles, per_metal=per_metal)
+        for metal, batch in batches.items():
+            print(f"{metal}: {len(batch)}/{per_metal} noticias específicas disponibles en los últimos 31 días.", flush=True)
+            for news_id in batch.id:
+                targets.setdefault(news_id, set()).add(metal)
+        articles = articles[articles.id.isin(targets)]
+    else:
+        targets = {r.id: matched_metals(r.title, r.summary) for r in articles.itertuples()}
+    pending = {news_id: {m for m in metals if (news_id, m) not in done} for news_id, metals in targets.items()}
+    articles = articles.loc[articles.id.map(lambda key: bool(pending[key])).astype(bool)].copy()
+    articles["_date"] = pd.to_datetime(articles.published_at, utc=True, format="ISO8601")
+    articles = articles.sort_values("_date", ascending=False)
+    if per_metal is None:
+        articles = articles.head(limit)
     count = 0
     for r in articles.to_dict("records"):
         content = r["title"] + "\n" + r["summary"]
@@ -109,12 +126,13 @@ def analyze(conn, limit=5, source=None):
             raise ValueError("Gemini no produjo una respuesta; no se guardó sentimiento.")
         text = "".join(p.get("text", "") for p in candidates[0].get("content", {}).get("parts", []))
         parsed = validate_response(text, content)
-        topical_metals = matched_metals(r["title"], r["summary"])
+        topical_metals = pending[r["id"]]
         rows = [dict(news_id=r["id"], metal=result.metal, score=result.score if result.relevant else None,
                      relevant=int(result.relevant), explanation=result.explanation, evidence=result.evidence,
                      model=model, prompt_version=PROMPT_VERSION, analyzed_at=now()) for result in parsed.results if result.metal in topical_metals]
         upsert(conn, "sentiment", rows)
         count += 1
+        print(f"Gemini: artículo {count} guardado ({', '.join(sorted(topical_metals))}).", flush=True)
         log(conn, "Gemini noticia", "ok", 1, f"Modelo {model}; noticia {r['id'][:12]}; prompt {PROMPT_VERSION}")
     log(conn, "Gemini", "ok", count, f"Modelo {model}, prompt {PROMPT_VERSION}")
     return count

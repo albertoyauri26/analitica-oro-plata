@@ -75,14 +75,14 @@ def test_macro_is_lagged_and_missing_is_not_zero():
 
 def test_news_not_backdated_to_publication():
     dates = pd.date_range("2020-01-31", periods=3, freq="ME")
-    articles = pd.DataFrame([dict(id="1", published_at="2020-01-15T00:00:00Z", fetched_at="2020-03-01T00:00:00Z")])
+    articles = pd.DataFrame([dict(id="1", title="Gold prices", summary="", published_at="2020-01-15T00:00:00Z", fetched_at="2020-03-01T00:00:00Z")])
     s = pd.DataFrame([dict(news_id="1", metal="gold", relevant=1, score=0.5, analyzed_at="2020-03-02T00:00:00Z")])
     f = add_context(pd.DataFrame(index=dates), articles, s, pd.DataFrame(), "gold")
     assert f.news_sentiment.isna().all()  # Captura tardía, además ya fuera de ventana.
 
 def test_recent_sentiment_first_capture_is_eligible_only_after_analysis():
     dates = pd.to_datetime(["2020-01-31", "2020-02-29"])
-    articles = pd.DataFrame([dict(id="1", published_at="2020-02-20T00:00:00Z", fetched_at="2020-02-21T00:00:00Z")])
+    articles = pd.DataFrame([dict(id="1", title="Gold prices", summary="", published_at="2020-02-20T00:00:00Z", fetched_at="2020-02-21T00:00:00Z")])
     s = pd.DataFrame([dict(news_id="1", metal="gold", relevant=1, score=-0.4, analyzed_at="2020-02-22T00:00:00Z")])
     f = add_context(pd.DataFrame(index=dates), articles, s, pd.DataFrame(), "gold")
     assert pd.isna(f.iloc[0].news_sentiment)
@@ -148,7 +148,7 @@ def test_sentiment_schema_evidence_and_range():
 def test_rss_numeric_published_date(db, monkeypatch):
     from metals import ingest
     body = b'''<rss version="2.0"><channel><title>Fixture</title><item>
-    <title>Test mining article</title><link>https://example.org/test</link>
+    <title>Test gold mining article</title><link>https://example.org/test</link>
     <pubDate>Wed, 23 Sep 2020 08:49:00 +0200</pubDate><published>1600832940</published>
     </item></channel></rss>'''
     monkeypatch.setattr(ingest, "download", lambda *args: (body, "test"))

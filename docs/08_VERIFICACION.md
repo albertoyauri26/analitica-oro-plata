@@ -1,57 +1,46 @@
 # Resultados verificados de esta instalación
 
-Generado desde los archivos reales: 2026-09-24T06:50:58.719678+00:00.
+Generado desde archivos reales: 2026-09-24T17:02:13.538941+00:00.
 
 ## Datos
 
-Precios: 640 observaciones de ambos metales, de 2000-01-31 a 2026-08-31.
-Macro: 14077 observaciones. Noticias: 25. Registros de sentimiento por metal: 12. Producción anual importada: 0.
+Precios: 640 observaciones. Macro: 14077.
+Noticias del tema: 12; registros antiguos excluidos: 23. Producción anual importada: 0.
 
-Fuentes de noticias guardadas:
+## Evaluación temporal
 
-- Federal Reserve: 15 artículos.
-- Mining Weekly: 8 artículos.
-- Mining Weekly seleccion verificada: 2 artículos.
+| Metal | Accuracy | Precisión macro | Macro-F1 | F1 mayoritaria | F1 persistencia |
+|---|---:|---:|---:|---:|---:|
+| gold | 27.78% | 20.35% | 0.2058 | 0.1867 | 0.4508 |
+| silver | 50.00% | 62.16% | 0.4333 | 0.1867 | 0.1669 |
 
-## Evaluación
+Selección entre 18 candidatos únicamente con validación temporal de desarrollo. Holdout de 36 observaciones, ya examinado en versiones anteriores: comparación retrospectiva, no prueba prospectiva inédita.
 
-| Metal | Macro-F1 XGBoost | Mayoritaria | Persistencia | Exactitud XGBoost |
-|---|---:|---:|---:|---:|
-| gold | 0.2058 | 0.1867 | 0.4508 | 0.2778 |
-| silver | 0.3423 | 0.1867 | 0.1669 | 0.4444 |
+La plata mejora accuracy y macro-F1 respecto de la versión anterior, pero disminuye su precisión macro. El oro no mejora. Consulta [comparación completa](12_MODELO_Y_METRICAS.md).
 
-Holdout: 2023-06-30 a 2026-06-30, 36 observaciones. Las ventanas pueden incluir huecos de cobertura, por lo que 36 observaciones no siempre corresponden a 36 meses consecutivos.
+## Noticias y Gemini
 
-El oro no supera la referencia de persistencia en este experimento. La plata supera ambas referencias. Esto no demuestra rentabilidad ni estabilidad fuera del periodo de prueba.
+| Metal | Seleccionadas | Analizadas | Relevantes | Pendientes | Score medio |
+|---|---:|---:|---:|---:|---:|
+| gold | 5/5 | 1 | 1 | 4 | +0.00 |
+| silver | 5/5 | 0 | 0 | 5 | Sin dato |
+
+Último registro Gemini (2026-09-24T16:57:34.098592+00:00): error. HTTP 503; 0 noticias completadas antes del fallo. Modelo gemini-3.6-flash.
+
+Los lotes se basan en los últimos 31 días; una noticia sobre ambos metales puede formar parte de ambos lotes y se consulta una vez. Pendiente no significa neutral. El texto disponible son titulares y fragmentos públicos breves, no artículos completos.
+
+El contexto aparece junto a la predicción y se exporta en su JSON. El XGBoost todavía excluye sentimiento/producción por falta de historial suficiente; no se atribuye la mejora de plata a Gemini.
 
 ## Últimas salidas
 
-- gold: objetivo 2026-09, tendencia Alcista, probabilidad máxima 43.0%, riesgo Alto, señal Abstenerse.
-- silver: objetivo 2026-09, tendencia Bajista, probabilidad máxima 43.6%, riesgo Alto, señal Abstenerse.
+- gold: objetivo 2026-09, Alcista, probabilidad máxima 43.0%, riesgo Alto, señal Abstenerse.
+- silver: objetivo 2026-09, Bajista, probabilidad máxima 49.8%, riesgo Alto, señal Abstenerse.
 
-Las salidas tienen origen y vigencia definidos. Al abrir la web más adelante puede activarse la abstención por vencimiento.
+## Software y límites
 
-## Gemini real
-
-| Modelo | Metal | Noticias analizadas | Relevantes |
-|---|---|---:|---:|
-| gemini-3.6-flash | gold | 6 | 0 |
-| gemini-3.6-flash | silver | 6 | 0 |
-
-Se usaron textos reales de RSS, con evidencia literal validada cuando son relevantes. Las respuestas no relevantes mantienen score ausente en SQLite. El servicio devolvió errores 503 intermitentes y después cuota agotada HTTP 429. Se conservaron seis noticias analizadas, todas no relevantes para ambos metales según Gemini. Dos titulares específicos verificados de oro/plata quedaron pendientes por cuota. La clave no se incluye en los reportes ni en los paquetes.
-
-## Verificación de software
-
-- 20 pruebas automatizadas aprobadas en el equipo de desarrollo, incluida la app con ambos metales, las reglas temporales, importación de noticias, reutilización de sentimiento y ocultación de credenciales.
-- pip check: sin dependencias incompatibles declaradas.
-- Modelos JSON cargados nuevamente para generar predicciones.
-- Aplicación local iniciada en http://localhost:8501 y revisada en navegador.
-- El entorno genera avisos de deprecación por la combinación pandas/NumPy; las pruebas pasan. Las versiones exactas están fijadas en requirements-lock.txt.
-
-## Pendientes y limitaciones
-
-- Completar publicaciones históricas verificadas de producción y un archivo prospectivo de noticias antes de evaluar su aporte al modelo.
-- Las variables de sentimiento/producción quedan excluidas del XGBoost actual por cobertura histórica insuficiente.
-- MINING.com devuelve 403; se utiliza Mining Weekly como alternativa.
-- El funcionamiento en la computadora física del docente se verifica allí siguiendo su guía. Una prueba extraída en este equipo no sustituye esa comprobación.
-- Docker/Hugging Face preparados, pero todavía no construidos ni publicados en una cuenta de Hugging Face.
+- 43 pruebas automatizadas aprobadas en esta comprobación.
+- Exportación y carga de modelos JSON comprobadas; revisión de la app con Oro y Plata.
+- Fuentes revisadas y probabilidades no calibradas externamente: el experimento no demuestra rentabilidad.
+- La combinación de pandas/NumPy genera avisos de deprecación; consulta requirements-lock.txt para las versiones verificadas.
+- La instalación en el equipo físico del docente se comprueba allí con su guía. Los ZIP excluyen .env y credenciales.
+- Hugging Face/Docker preparados, aún no publicados ni construidos en una cuenta externa.

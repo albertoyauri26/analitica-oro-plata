@@ -38,7 +38,7 @@ Las tres variables complementarias sólo se seleccionan si el primer bloque de e
 
 ## Entrenamiento y evaluación
 
-Se entrenan dos clasificadores XGBoost independientes. Semilla 42, objetivo multiclase, 3 clases, CPU y dos hilos. Se comparan cuatro combinaciones de profundidad 2/3 y 80/160 árboles. La tasa de aprendizaje y regularización permanecen fijas.
+Se entrenan dos clasificadores XGBoost independientes. Semilla 42, objetivo multiclase, 3 clases, CPU y dos hilos. Se comparan 18 candidatos definidos previamente: las cuatro configuraciones iniciales, dos configuraciones adicionales más regularizadas y pesos uniformes, balanceados o por recencia. Se selecciona por macro-F1 medio en validación temporal de desarrollo; el holdout no participa en esa selección. Los detalles y la comparación están en `12_MODELO_Y_METRICAS.md`.
 
 Los últimos 36 meses con etiqueta utilizable se reservan como holdout. El conjunto de desarrollo anterior se separa del holdout mediante una purga de dos filas. Dentro de desarrollo se hacen tres particiones expansivas, cada validación con 24 meses y purga de dos filas. Si hubiera huecos por datos faltantes, las ventanas contienen observaciones disponibles, no necesariamente 24 meses consecutivos; el control adicional por fechas impide etiquetas futuras.
 
@@ -68,7 +68,7 @@ Se abstiene si la predicción está vencida, tiene antigüedad excesiva, el orig
 
 Los archivos del Banco Mundial y FRED son versiones actuales revisadas. Los rezagos **no eliminan el sesgo por revisiones históricas**. Este MVP ofrece una validación retrospectiva temporal aproximada; para una reconstrucción estricta deben usarse archivos de publicaciones y ALFRED con joins por fecha de disponibilidad, además de versiones históricas de precios. Esa extensión no está implementada en esta versión.
 
-Un holdout de 36 meses tiene incertidumbre y puede representar un régimen económico particular. La búsqueda de cuatro modelos no agota alternativas. No se hacen afirmaciones causales. Las probabilidades no están calibradas externamente. No se incluye un backtest de ganancias porque promedios mensuales no son precios ejecutables y no hay un instrumento, comisiones, spread ni reglas de negociación definidos.
+Un holdout de 36 observaciones mensuales tiene incertidumbre y puede representar un régimen económico particular. Ya fue examinado en versiones anteriores: esta comparación retrospectiva requiere una prueba prospectiva nueva. La búsqueda de 18 candidatos no agota alternativas y puede sobreajustar desarrollo. No se hacen afirmaciones causales. Las probabilidades no están calibradas externamente. No se incluye un backtest de ganancias porque promedios mensuales no son precios ejecutables y no hay un instrumento, comisiones, spread ni reglas de negociación definidos.
 
 El éxito académico se mide por reproducibilidad, integridad temporal, comparación honesta, interpretación y funcionamiento del sistema. La utilidad predictiva se determina con las métricas reales, incluso si el resultado es negativo.
 

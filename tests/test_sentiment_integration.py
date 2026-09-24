@@ -10,7 +10,7 @@ from metals.presentation import sentiment_view
 def test_saved_results_are_reused_and_filtered_by_source(monkeypatch):
     conn = sqlite3.connect(":memory:")
     conn.executescript(SCHEMA)
-    upsert(conn, "news", [dict(id="n1", title="Texto literal", summary="Información", url="https://example.org/1", source="TestSource", published_at="2020-02-01", fetched_at="2020-02-02")])
+    upsert(conn, "news", [dict(id="n1", title="Texto literal", summary="Precios de oro y plata", url="https://example.org/1", source="TestSource", published_at="2020-02-01", fetched_at="2020-02-02")])
     rows = [dict(metal=m, relevant=True, score=0.4, explanation="Interpretación de prueba", evidence="Texto literal") for m in ("gold", "silver")]
     class Response:
         ok = True

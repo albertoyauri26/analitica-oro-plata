@@ -72,6 +72,9 @@ flowchart TD
 6. [Informe académico](docs/06_INFORME_ACADEMICO.md).
 7. [Guion de demostración y criterios de aceptación](docs/07_DEMOSTRACION.md).
 8. [Resultados verificados de esta instalación](docs/08_VERIFICACION.md).
+9. [Cinco noticias por metal y sentimiento](docs/11_NOTICIAS_Y_SENTIMIENTO.md).
+10. [Mejora del modelo y métricas](docs/12_MODELO_Y_METRICAS.md).
+11. [Fuentes específicas de noticias](docs/13_FUENTES_NOTICIAS.md).
 
 ## Alcance honesto
 

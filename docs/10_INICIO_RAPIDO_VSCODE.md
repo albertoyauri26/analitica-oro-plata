@@ -38,7 +38,7 @@ La clave está configurada localmente. No la pegues en el código ni en reportes
 
 ```powershell
 .\.venv\Scripts\python.exe -m metals.cli gemini-check
-.\.venv\Scripts\python.exe -m metals.cli sentiment --limit 5
+.\.venv\Scripts\python.exe -m metals.cli news-refresh --per-metal 5 --analyze
 ```
 
 Abre **Noticias y minería** y selecciona **Analizadas con Gemini**. Cada resultado muestra score, relevancia, explicación, evidencia, modelo y fecha. Un artículo ya analizado con el mismo modelo/prompt no se vuelve a consumir.
