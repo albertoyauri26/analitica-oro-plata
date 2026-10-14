@@ -56,7 +56,7 @@ def risk_and_signal(row, probabilities, report, today=None):
             "reasons": gated + reasons or ["Sin alertas bajo las reglas configuradas; esto no elimina el riesgo."],
             "rules": "Heurística académica v1; no calibrada con pérdidas financieras."}
 
-def predict(dataset, metal, destination=ARTIFACTS, save=True, news_context=None):
+def predict(dataset, metal, destination=ARTIFACTS, save=True, news_context=None, hybrid_weight=0.15):
     path = destination / metal
     report = json.loads((path / "report.json").read_text(encoding="utf-8"))
     if hashlib.sha256((path / "model.json").read_bytes()).hexdigest() != report["model_sha256"]:
@@ -82,8 +82,10 @@ def predict(dataset, metal, destination=ARTIFACTS, save=True, news_context=None)
               **risk_and_signal(row, p, report)}
     if news_context is not None:
         from .news_context import contextual_reading
+        from .hybrid import combine
         result["news_context"] = news_context
         result["news_reading"] = contextual_reading(news_context, result["trend"])
+        result["hybrid"] = combine(result, news_context, weight=hybrid_weight)
     if save:
         save_json(path / "prediction.json", result)
     return result

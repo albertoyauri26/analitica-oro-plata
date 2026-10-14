@@ -13,14 +13,16 @@ def main():
     sub.add_parser("ingest", help="Descargar precios, macro y noticias reales")
     sub.add_parser("build", help="Construir dataset mensual")
     sub.add_parser("train", help="Validación temporal, modelos y reportes")
-    sub.add_parser("predict", help="Tendencia, riesgo y señal")
+    prediction_cmd = sub.add_parser("predict", help="Tendencia, riesgo, señal y escenario con sentimiento")
+    prediction_cmd.add_argument("--news-weight", type=float, default=0.15, help="Peso experimental de noticias de 0 a 0.20; 0 desactiva la mezcla")
     sub.add_parser("run", help="Ejecutar ingesta, dataset, entrenamiento y predicción")
     sub.add_parser("status", help="Consultar cobertura almacenada")
     sub.add_parser("gemini-check", help="Verificar credencial y modelos disponibles sin mostrar la clave")
     news_refresh = sub.add_parser("news-refresh", help="Recopilar noticias específicas por metal; opcionalmente analizarlas")
     news_refresh.add_argument("--per-metal", type=int, default=5, choices=range(1, 21), metavar="1-20")
-    news_refresh.add_argument("--analyze", action="store_true", help="Analizar el lote con Gemini (consume tu cuota)")
-    sentiment = sub.add_parser("sentiment", help="Analizar noticias con Gemini (usa tu cuota)")
+    news_refresh.add_argument("--analyze", action="store_true", help="Gemini con respaldo local FinBERT; Gemini consume cuota")
+    sentiment = sub.add_parser("sentiment", help="Analizar noticias: Gemini y API local alternativa")
+    sentiment.add_argument("--provider", choices=("auto", "gemini", "finbert"), help="Proveedor explícito para esta ejecución; gemini no usa respaldo local")
     news_quantity = sentiment.add_mutually_exclusive_group()
     news_quantity.add_argument("--limit", type=int, choices=range(1, 101), metavar="1-100", help="Límite total de artículos pendientes, modo manual")
     news_quantity.add_argument("--per-metal", type=int, choices=range(1, 21), metavar="1-20", help="Por defecto: 5 por cada metal")
@@ -57,7 +59,7 @@ def main():
             print(f"Noticias importadas: {import_news(conn, args.path)}")
         if args.command == "sentiment":
             from .sentiment import analyze
-            print(f"Noticias analizadas: {analyze(conn, args.limit or 5, args.source, per_metal=None if args.limit else args.per_metal or 5)}")
+            print(f"Noticias analizadas: {analyze(conn, args.limit or 5, args.source, per_metal=None if args.limit else args.per_metal or 5, provider=args.provider)}")
         if args.command == "news-refresh":
             from .news_sources import fetch_targeted_news
             from .storage import upsert, log
@@ -84,7 +86,7 @@ def main():
             from .news_context import snapshot
             for metal in ("gold", "silver"):
                 context = snapshot(read(conn, "news"), read(conn, "sentiment"), metal)
-                print(json.dumps(predict(dataset, metal, news_context=context), indent=2, ensure_ascii=False))
+                print(json.dumps(predict(dataset, metal, news_context=context, hybrid_weight=getattr(args, "news_weight", 0.15)), indent=2, ensure_ascii=False))
         if args.command == "status":
             for table in ("prices", "macro", "news", "sentiment", "production"):
                 frame = read(conn, table)

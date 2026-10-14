@@ -12,10 +12,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 def package(include_data=False, target_kind="space"):
-    required = ["app.py", "Dockerfile", "requirements.txt", "requirements-lock.txt", "README.md", ".dockerignore", ".streamlit/config.toml"]
+    required = ["app.py", "Dockerfile", "requirements.txt", "requirements-lock.txt", "requirements-sentiment.txt", "README.md", ".dockerignore", ".streamlit/config.toml"]
     files = [ROOT / p for p in required]
     if target_kind == "docente":
-        files.extend(ROOT / name for name in ("INSTALAR.cmd", "INICIAR.cmd", "ACTUALIZAR.cmd", "LEEME_DOCENTE.md", "pytest.ini", ".env.example", ".gitignore", ".vscode/settings.json", ".vscode/launch.json"))
+        files.extend(ROOT / name for name in ("INSTALAR.cmd", "INICIAR.cmd", "ACTUALIZAR.cmd", "INSTALAR_SENTIMIENTO.cmd", "ACTUALIZAR_NOTICIAS.cmd", "LEEME_DOCENTE.md", "pytest.ini", ".env.example", ".gitignore", ".vscode/settings.json", ".vscode/launch.json"))
     for folder in ("metals", "docs", "templates"):
         files.extend(p for p in (ROOT / folder).rglob("*") if p.is_file() and "__pycache__" not in p.parts and p.suffix in {".py", ".md", ".csv"})
     if target_kind == "docente":

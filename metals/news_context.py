@@ -12,11 +12,25 @@ def snapshot(news, sentiment, metal, per_metal=5, at=None):
     results = results[results._time <= current].sort_values("_time").drop_duplicates("news_id", keep="first")
     relevant = results[(results.relevant == 1) & results.score.notna()]
     score = float(relevant.score.mean()) if len(relevant) else None
-    return {"as_of": current.isoformat(), "window_days": 31, "requested": per_metal,
+    audit, providers = [], {}
+    for article in selected.to_dict("records"):
+        analyzed = results[results.news_id == article["id"]]
+        item = analyzed.iloc[0] if len(analyzed) else None
+        provider = str(item.model) if item is not None else None
+        if provider:
+            providers[provider] = providers.get(provider, 0) + 1
+        audit.append({"id": article["id"], "published_at": article["published_at"], "fetched_at": article["fetched_at"],
+                      "analyzed_at": str(item.analyzed_at) if item is not None else None,
+                      "relevant": bool(item.relevant) if item is not None else None,
+                      "score": float(item.score) if item is not None and pd.notna(item.score) else None,
+                      "provider": provider})
+    return {"metal": metal, "as_of": current.isoformat(), "window_days": 31, "requested": per_metal,
             "selected": len(selected), "analyzed": len(results), "relevant": len(relevant),
             "pending": len(selected) - len(results), "missing_articles": max(0, per_metal - len(selected)),
             "mean_sentiment": score, "tone": "Sin dato" if score is None else "Positivo" if score > 0.1 else "Negativo" if score < -0.1 else "Mixto / neutral",
-            "news_ids": selected.id.tolist(), "role": "Contexto reciente; no modifica las probabilidades XGBoost ni retrofecha noticias."}
+            "news_ids": selected.id.tolist(), "providers": providers, "article_audit": audit,
+            "score_semantics": "Tono financiero de FinBERT o interpretación contextual de Gemini; no efecto causal del precio.",
+            "role": "Contexto actual y escenario experimental separado; no modifica la predicción XGBoost evaluada."}
 
 
 def contextual_reading(context, trend):

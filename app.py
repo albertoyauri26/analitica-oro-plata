@@ -8,7 +8,8 @@ from metals.config import ARTIFACTS, ROOT, LABELS, THRESHOLDS, CORE_FEATURES
 from metals.storage import connect, read
 from metals.features import build_dataset, technical
 from metals.decision import predict
-from metals.presentation import style, chart, sentiment_view, summary_card, news_cards, publisher_name, topic_label, COLORS, GOLD, SILVER, GREEN, RED
+from metals.presentation import style, chart, sentiment_view, summary_card, news_cards, publisher_name, topic_label, hero, status_strip, provider_name, COLORS, GOLD, SILVER, GREEN, RED
+from metals.explain import FEATURE_LABELS, feature_table, model_parameters
 from metals.news_filter import filter_news
 from metals.news_context import snapshot as news_snapshot
 
@@ -31,24 +32,25 @@ with st.sidebar:
     st.markdown('<div class="brand">AURUM</div><div class="lede">Laboratorio de metales preciosos</div>', unsafe_allow_html=True)
     metal_label = st.selectbox("Metal", ["Oro", "Plata"])
     horizon = st.selectbox("Historia visible", ["Últimos 5 años", "Últimos 10 años", "Todo el histórico"], index=1)
+    st.caption("ESCENARIO CON NOTICIAS")
+    hybrid_enabled = st.toggle("Incorporar sentimiento", value=True, help="Activa una mezcla experimental separada del modelo evaluado. No se le atribuyen las métricas históricas de XGBoost.")
+    hybrid_weight = st.slider("Peso máximo del sentimiento", 0, 20, 15, step=1, format="%d%%", disabled=not hybrid_enabled, help="Parámetro de una regla experimental, no aprendido. Se reduce según la cobertura y la magnitud del tono; 0% reproduce el modelo base.")
     st.divider()
     st.caption("FUENTES Y COBERTURA")
     st.write("Banco Mundial · Precios mensuales")
     st.write("FRED · Contexto macroeconómico")
     st.write("Noticias · Solo oro y plata")
-    st.write(f"Gemini · {sentiment.news_id.nunique() if not sentiment.empty else 0} noticias del tema analizadas")
+    st.write(f"Sentimiento · {sentiment.news_id.nunique() if not sentiment.empty else 0} artículos analizados")
     if st.button("Actualizar vista", width="stretch"):
         st.rerun()
-    st.caption("La vista utiliza datos guardados. Las descargas y el análisis con Gemini se ejecutan desde tu terminal.")
+    st.caption("Gemini como primera opción; API local FinBERT como respaldo. La vista usa resultados guardados.")
     with st.expander("Cómo ejecutar en VS Code"):
         st.code(r".\.venv\Scripts\python.exe -m streamlit run app.py", language="powershell")
         st.write("Guía: docs/01_GUIA_LOCAL.md")
     st.markdown("[Fuente de precios](https://www.worldbank.org/en/research/commodity-markets) · [Series FRED](https://fred.stlouisfed.org/)")
 
 metal = {"Oro": "gold", "Plata": "silver"}[metal_label]
-st.markdown('<div class="eyebrow">Machine Learning · Analítica predictiva</div>', unsafe_allow_html=True)
-st.title("Sistema de analítica predictiva para la inversión en metales preciosos")
-st.markdown('<div class="lede">Explora el mercado, evalúa la tendencia mensual y comprende la evidencia detrás de cada señal.</div>', unsafe_allow_html=True)
+hero()
 
 if prices.empty:
     st.info("Empieza descargando las fuentes reales. No hay datos de demostración inventados.")
@@ -71,22 +73,23 @@ recent_return = history.pct_change(fill_method=None).iloc[-1]
 article_view = sentiment_view(news, sentiment, metal)
 news_context = news_snapshot(news, sentiment, metal)
 recent_articles = article_view[article_view.id.isin(news_context["news_ids"])] if not article_view.empty else article_view
+status_strip(metal_label, last.date.strftime("%Y-%m"), news_context)
 report_path = ARTIFACTS / metal / "report.json"
 report = json.loads(report_path.read_text(encoding="utf-8")) if report_path.exists() else None
 prediction, prediction_error = None, None
 if report and dataset is not None:
     try:
-        prediction = predict(dataset, metal, save=False, news_context=news_context)
+        prediction = predict(dataset, metal, save=False, news_context=news_context, hybrid_weight=hybrid_weight / 100 if hybrid_enabled else 0)
     except (ValueError, FileNotFoundError) as exc:
         prediction_error = str(exc)
 
-st.caption("Investigación académica. Los promedios mensuales no son precios de ejecución. Las probabilidades no representan certeza ni rentabilidad.")
+st.caption("MVP académico · Precios promedio mensuales en USD por onza troy · Sin ejecución de operaciones")
 if (pd.Timestamp.now().normalize() - last.date).days > 100:
     st.warning(f"Histórico desactualizado: último precio observado en {last.date:%Y-%m}.")
 if prediction_error:
     st.warning(prediction_error)
 
-tabs = st.tabs(["Descriptivo", "Predictivo", "Prescriptivo", "Noticias y minería", "Calidad y metodología"])
+tabs = st.tabs(["Descriptivo", "Predictivo", "Prescriptivo", "Noticias y minería", "Parámetros y calidad"])
 
 with tabs[0]:
     st.subheader("Dashboard — Descriptivo")
@@ -160,12 +163,33 @@ with tabs[1]:
         with a:
             summary_card(f"{metal_label} · tendencia mensual", prediction["trend"], f"Mes objetivo {prediction['target_month'][:7]}", trend_tone)
         with b:
-            summary_card("Probabilidad de la tendencia", f"{prediction['max_probability']:.1%}", "Mayor probabilidad de clase")
+            summary_card("Probabilidad · XGBoost", f"{prediction['max_probability']:.1%}", "Mayor probabilidad de clase")
         with c:
-            summary_card("Accuracy · prueba temporal", f"{report['xgboost']['accuracy']:.3f}", "Exactitud fuera del entrenamiento")
+            summary_card("Accuracy · prueba temporal", f"{report['xgboost']['accuracy']:.1%}", "Exactitud fuera del entrenamiento")
         with d:
             summary_card("Macro-F1 · prueba temporal", f"{report['xgboost']['macro_f1']:.3f}", "Promedio de las tres clases")
         st.write(f"Mes objetivo: **{prediction['target_month'][:7]}** · Origen: **{prediction['origin']}** · Último mes de precios utilizado: **{prediction['source_price_month'][:7]}**.")
+        hybrid = prediction["hybrid"]
+        with st.container(border=True):
+            st.markdown("#### Escenario actual con sentimiento")
+            if hybrid["status"] == "applied_experimental":
+                a, b, c = st.columns(3)
+                a.metric("Tendencia del escenario", hybrid["trend"])
+                b.metric("Sentimiento agregado", f"{news_context['mean_sentiment']:+.3f}")
+                c.metric("Peso efectivo", f"{hybrid['applied_weight']:.2%}", help="Peso elegido × proporción de noticias relevantes × magnitud del sentimiento.")
+                contrast = pd.DataFrame({"XGBoost evaluado": hybrid["baseline_probabilities"], "Escenario con noticias": hybrid["hybrid_probabilities"]})
+                contrast["Cambio (puntos porcentuales)"] = (contrast["Escenario con noticias"] - contrast["XGBoost evaluado"]) * 100
+                st.dataframe(contrast.style.format({"XGBoost evaluado": "{:.2%}", "Escenario con noticias": "{:.2%}", "Cambio (puntos porcentuales)": "{:+.3f}"}), width="stretch")
+                st.caption("Experimento por reglas, sin accuracy validado: asocia tono con dirección, conserva Neutral y mantiene la señal y el riesgo del modelo base. El tono de una minera no demuestra impacto sobre el precio del metal.")
+            elif hybrid["status"] == "disabled":
+                st.info("Escenario desactivado. Puedes incorporarlo desde el panel lateral; con peso 0% reproduce XGBoost.")
+            else:
+                st.info("Todavía no se aplica el escenario: " + " ".join(hybrid["reasons"][:3]))
+            with st.expander("Supuestos y controles del escenario"):
+                st.write(f"Peso solicitado: **{hybrid['requested_weight']:.0%}** · Máximo: **20%** · Lote mínimo: **5 analizadas y 3 relevantes**.")
+                st.write("Se comprueban el metal, las fechas de publicación/captura/análisis, el mes objetivo y la coherencia del score agregado. La señal de abstención nunca se convierte en compra por esta mezcla.")
+                st.caption("Las métricas que aparecen debajo pertenecen exclusivamente al XGBoost evaluado.")
+            st.download_button("Exportar predicción y escenario", json.dumps(prediction, ensure_ascii=False, indent=2).encode(), f"{metal}_escenario.json", "application/json")
         left, right = st.columns([1.6, 1])
         with left:
             probs = pd.DataFrame({"Tendencia": list(prediction["probabilities"]), "Probabilidad": list(prediction["probabilities"].values())})
@@ -199,7 +223,7 @@ with tabs[1]:
                 st.write("Sentimiento reciente: **Sin dato**. No se asigna un cero a las noticias pendientes.")
             st.write(f"Lote reciente: **{news_context['selected']}/5** noticias · **{news_context['analyzed']}** analizadas · **{news_context['pending']}** pendientes.")
             st.info(prediction["news_reading"])
-            st.caption("Las noticias se integran al dataset a partir de su disponibilidad. El entrenamiento admite esta variable solo con cobertura suficiente; los análisis posteriores al origen no modifican retroactivamente esta predicción.")
+            st.caption("Las noticias alimentan el escenario actual y se archivan para futuras variables aprendidas. XGBoost todavía exige más historial de sentimiento; no se retrofechan los análisis.")
     else:
         st.info("Entrena y ejecuta predict desde la terminal para obtener el resultado.")
     if report:
@@ -222,7 +246,7 @@ with tabs[1]:
             chart(fig, 310)
         left, right = st.columns(2)
         with left:
-            importance = pd.Series(report["importance"]).sort_values().tail(10)
+            importance = pd.Series(report["importance"]).sort_values().tail(10).rename(index=FEATURE_LABELS)
             chart(px.bar(x=importance.values, y=importance.index, orientation="h", labels={"x": "Importancia interna", "y": ""}, title="Variables más utilizadas"), 340)
             st.caption("Importancia interna del modelo evaluado; no demuestra causalidad.")
         with right:
@@ -272,10 +296,10 @@ with tabs[2]:
         st.info("La señal estará disponible después del entrenamiento y la predicción.")
 
 with tabs[3]:
-    st.subheader("Sentimiento de noticias con Gemini")
-    st.caption(f"Solo artículos que mencionan {metal_label.lower()} en contexto de mercado o minería. Gemini confirma la relevancia y evalúa el tono; el filtro temático no asigna sentimiento.")
+    st.subheader(f"Noticias y sentimiento · {metal_label}")
+    st.caption("Cinco artículos específicos por metal. Gemini interpreta el contexto; la API local FinBERT aporta tono financiero cuando Gemini falla. Cada resultado identifica su proveedor.")
     gemini_log = logs[logs.source.str.startswith("Gemini", na=False)].sort_values("id")
-    if len(gemini_log) and gemini_log.iloc[-1].status == "error":
+    if len(gemini_log) and gemini_log.iloc[-1].status == "error" and news_context["pending"]:
         last_error = str(gemini_log.iloc[-1].detail)
         if "429" in last_error:
             st.warning("Último intento: Google informó cuota agotada (HTTP 429). Los análisis completados se conservan; las noticias pendientes requieren cuota disponible.")
@@ -294,21 +318,28 @@ with tabs[3]:
         if len(scored):
             plot = scored.copy()
             plot["Fecha"] = pd.to_datetime(plot.published_at, utc=True, format="ISO8601")
-            plot["Tono"] = plot.score.map(lambda x: "Favorable" if x > 0 else "Desfavorable" if x < 0 else "Neutral")
-            chart(px.scatter(plot, x="Fecha", y="score", color="Tono", hover_data=["title", "source"], color_discrete_map={"Favorable": GREEN, "Desfavorable": RED, "Neutral": SILVER}, labels={"score": "Sentimiento"}, range_y=[-1.1, 1.1], title="Interpretaciones de Gemini por fecha de noticia"), 300)
+            plot["Tono"] = plot.score.map(lambda x: "Positivo" if x > 0.1 else "Negativo" if x < -0.1 else "Mixto / neutral")
+            plot["Artículo"] = [f"Noticia {i+1} · {date:%d/%m}" for i,date in enumerate(plot.Fecha)]
+            plot["Proveedor"] = plot.model.map(provider_name)
+            fig = px.bar(plot, x="score", y="Artículo", orientation="h", color="Tono", hover_data=["title", "Proveedor"], color_discrete_map={"Positivo": GREEN, "Negativo": RED, "Mixto / neutral": SILVER}, labels={"score": "Tono financiero · −1 a +1"}, range_x=[-1, 1], title="Sentimiento de cada noticia")
+            fig.add_vline(x=0, line_color="#95a8bd", line_dash="dot")
+            chart(fig, 320)
         else:
             st.info("No hay sentimiento relevante disponible en esta ventana. Una noticia pendiente o no relevante no se convierte en Neutral.")
-        st.caption("El contexto recién analizado no se añade a una predicción con origen anterior. Su inclusión en XGBoost exige cobertura histórica suficiente y fechas compatibles.")
+        providers_text = " · ".join(f"{provider_name(name)}: {count}" for name,count in news_context.get("providers", {}).items())
+        st.caption(f"Análisis guardados en el lote: {providers_text or 'ninguno'}. FinBERT clasifica tono del texto; su relevancia temática proviene del filtro. No estima causalidad sobre precios.")
         if news_context["missing_articles"]:
             st.info(f"Faltan {news_context['missing_articles']} artículos específicos recientes para completar el lote de cinco. No se rellena con noticias de otros temas.")
-        mode = st.radio("Mostrar noticias", ["Todas", "Analizadas con Gemini", "Pendientes"], horizontal=True)
+        mode = st.radio("Mostrar noticias", ["Todas", "Analizadas", "Pendientes"], horizontal=True)
         display = article_view
-        if mode == "Analizadas con Gemini":
+        if mode == "Analizadas":
             display = display[display.analyzed_at.notna()]
         elif mode == "Pendientes":
             display = display[display.analyzed_at.isna()]
         for item in display.head(20).to_dict("records"):
-            with st.expander(f"{item['published_at'][:10]} · {publisher_name(item['source'])} · {topic_label(item['title'], item['summary'])} · {item['title']}"):
+            tone_text = f"{item['score']:+.2f}" if item['relevant'] == 1 and pd.notna(item['score']) else "Pendiente" if pd.isna(item['analyzed_at']) else "No relevante"
+            with st.expander(f"{tone_text} · {topic_label(item['title'], item['summary'])} · {item['title']}"):
+                st.caption(f"{publisher_name(item['source'])} · Publicación {item['published_at'][:10]} · {provider_name(item.get('model'))}")
                 st.write(item["summary"])
                 st.link_button("Leer fuente original", item["url"])
                 if pd.notna(item.get("analyzed_at")):
@@ -321,16 +352,16 @@ with tabs[3]:
                         st.text(item["evidence"])
                     st.caption(f"Modelo: {item['model']} · Análisis: {item['analyzed_at']}")
                 else:
-                    st.caption("Pendiente de Gemini. No se ha asignado sentimiento.")
+                    st.caption("Pendiente de análisis. No se ha asignado sentimiento.")
         export_cols = ["title", "url", "source", "published_at", "relevant", "score", "explanation", "evidence", "model", "analyzed_at"]
         st.download_button("Descargar noticias y sentimiento", article_view[export_cols].to_csv(index=False).encode("utf-8-sig"), f"{metal}_sentiment.csv", "text/csv")
     else:
         st.info(f"No hay noticias específicas de {metal_label.lower()} guardadas. Ejecuta la ingesta o importa artículos verificados.")
-    with st.expander("Ejecutar Gemini desde Visual Studio Code"):
+    with st.expander("Actualizar noticias y análisis desde Visual Studio Code"):
         st.code(r".\.venv\Scripts\python.exe -m metals.cli gemini-check", language="powershell")
         st.code(r".\.venv\Scripts\python.exe -m metals.cli news-refresh --per-metal 5 --analyze", language="powershell")
         st.caption("Descarga artículos específicos, selecciona hasta cinco por metal y reutiliza análisis ya guardados. Una noticia que trata ambos metales se consulta una sola vez.")
-        st.caption("La clave se configura únicamente en .env. La web no la muestra ni hace llamadas de pago.")
+        st.caption("Gemini usa la clave local de .env. Si falla, la API local FinBERT continúa el lote. La web no muestra claves ni inicia llamadas de pago.")
     st.subheader("Contexto de producción minera")
     if production.empty:
         st.info("Sin cifras anuales importadas. El conector USGS está preparado; deben añadirse observaciones verificadas con su fecha de publicación.")
@@ -339,7 +370,14 @@ with tabs[3]:
     st.link_button("Consultar producción en USGS", "https://www.usgs.gov/centers/national-minerals-information-center/mineral-commodity-summaries")
 
 with tabs[4]:
-    st.subheader("Datos que puedes rastrear y resultados que puedes reproducir")
+    st.subheader("Parámetros, variables y calidad")
+    if report:
+        st.dataframe(model_parameters(report, THRESHOLDS[metal]), hide_index=True, width="stretch")
+        if dataset is not None:
+            st.markdown("#### Variables que recibió el modelo")
+            row = dataset[dataset.metal == metal].sort_values("date").iloc[-1]
+            st.caption(f"Origen {row.date:%Y-%m-%d}. Precios hasta {row.source_price_month:%Y-%m}; variables macro con rezago adicional. Las tasas se expresan en %, sus cambios en puntos porcentuales.")
+            st.dataframe(feature_table(row, report["features"]), hide_index=True, width="stretch")
     if dataset is not None:
         m = dataset[dataset.metal == metal]
         a, b, c = st.columns(3)

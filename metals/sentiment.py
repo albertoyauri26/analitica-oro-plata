@@ -1,26 +1,23 @@
-"""Gemini REST: JSON validado, evidencias y fechas. No hay sentimiento ficticio."""
-import hashlib
+"""Gemini y API local FinBERT: resultados reales, caché y continuidad por lote."""
 import json
 import os
 from typing import Literal
 import requests
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field, ConfigDict
 from .config import ROOT
 from .storage import read, upsert, now, log
 from .news_filter import filter_news, matched_metals, select_news_batch
+from .sentiment_providers import LOCAL_MODEL, LOCAL_PROMPT_VERSION
+from .local_sentiment_api import analyze_local
 import pandas as pd
 
 PROMPT_VERSION = "metals-v1"
 
 def api_session():
-    client = requests.Session()
-    # Sólo reintentar errores de servicio; no repetir claves inválidas ni cuota agotada.
-    client.mount("https://", HTTPAdapter(max_retries=Retry(total=2, backoff_factor=1,
-                 status_forcelist=[500, 502, 503, 504], allowed_methods=["GET", "POST"], raise_on_status=False)))
-    return client
+    # Un intento por artículo. Ante el primer fallo se abre el circuito del lote.
+    # Nunca reintentar 429 ni agotar la cuota intentando otros modelos remotos.
+    return requests.Session()
 
 def configuration():
     load_dotenv(ROOT / ".env", override=True)
@@ -56,7 +53,7 @@ class MetalSentiment(BaseModel):
     model_config = ConfigDict(extra="forbid")
     metal: Literal["gold", "silver"]
     relevant: bool
-    score: float = Field(ge=-1, le=1)
+    score: float = Field(ge=-1, le=1, allow_inf_nan=False)
     explanation: str = Field(max_length=700)
     evidence: str = Field(max_length=300)
 
@@ -73,14 +70,21 @@ def validate_response(text, source_text):
             raise ValueError("La evidencia de Gemini no coincide con el texto de entrada.")
     return parsed
 
-def analyze(conn, limit=5, source=None, per_metal=None):
-    key, model = configuration()
+def analyze(conn, limit=5, source=None, per_metal=None, provider=None):
+    load_dotenv(ROOT / ".env", override=True)
+    provider = (provider if provider is not None else os.environ.get("SENTIMENT_PROVIDER", "auto")).strip().lower()
+    if provider not in {"auto", "gemini", "finbert"}:
+        raise ValueError("SENTIMENT_PROVIDER debe ser auto, gemini o finbert.")
     articles, previous = read(conn, "news"), read(conn, "sentiment")
     articles = filter_news(articles)
     if source:
         articles = articles[articles.source == source]
-    done = set(zip(previous.loc[(previous.model == model) & (previous.prompt_version == PROMPT_VERSION), "news_id"],
-                   previous.loc[(previous.model == model) & (previous.prompt_version == PROMPT_VERSION), "metal"]))
+    reusable = previous[previous.prompt_version.isin({PROMPT_VERSION, LOCAL_PROMPT_VERSION})]
+    if provider == "finbert":
+        reusable = reusable[(reusable.model == LOCAL_MODEL) & (reusable.prompt_version == LOCAL_PROMPT_VERSION)]
+    elif provider == "gemini":
+        reusable = reusable[reusable.prompt_version == PROMPT_VERSION]
+    done = set(zip(reusable.news_id, reusable.metal))
     targets = {}
     if per_metal is not None:
         batches = select_news_batch(articles, per_metal=per_metal)
@@ -97,6 +101,20 @@ def analyze(conn, limit=5, source=None, per_metal=None):
     articles = articles.sort_values("_date", ascending=False)
     if per_metal is None:
         articles = articles.head(limit)
+    if articles.empty:
+        log(conn, "Sentimiento", "ok", 0, "Sin noticias pendientes; se reutilizan resultados almacenados.")
+        return 0
+    key, model = "", ""
+    active = provider
+    if provider != "finbert":
+        try:
+            key, model = configuration()
+            active = "gemini"
+        except ValueError:
+            if provider == "gemini":
+                raise
+            active = "finbert"
+            log(conn, "Gemini", "warning", 0, "Sin configuración válida: se usa FinBERT local.")
     count = 0
     for r in articles.to_dict("records"):
         content = r["title"] + "\n" + r["summary"]
@@ -109,30 +127,49 @@ def analyze(conn, limit=5, source=None, per_metal=None):
             "cita literal breve del texto si relevant=true. Si no relevante, evidence vacío y score=0. "
             "El signo describe una interpretación, no una relación causal demostrada.\nTEXTO:\n" + content
         )
-        response = api_session().post(
-            f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
-            headers={"x-goog-api-key": key, "Content-Type": "application/json"},
-            json={"contents": [{"parts": [{"text": prompt}]}],
-                  "generationConfig": {"temperature": 0,
-                     "responseMimeType": "application/json", "responseJsonSchema": SentimentResponse.model_json_schema()}},
-            timeout=(10, 60))
-        if not response.ok:
-            # Nunca imprimir el cuerpo HTTP: podría incluir información sensible.
-            log(conn, "Gemini", "error", count, f"HTTP {response.status_code}; {count} noticias completadas antes del fallo. Modelo {model}.")
-            raise ValueError(error_detail(response, key))
-        body = response.json()
-        candidates = body.get("candidates", [])
-        if not candidates:
-            raise ValueError("Gemini no produjo una respuesta; no se guardó sentimiento.")
-        text = "".join(p.get("text", "") for p in candidates[0].get("content", {}).get("parts", []))
-        parsed = validate_response(text, content)
+        used_model, used_version = model, PROMPT_VERSION
+        if active == "gemini":
+            response = None
+            try:
+                response = api_session().post(
+                    f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
+                    headers={"x-goog-api-key": key, "Content-Type": "application/json"},
+                    json={"contents": [{"parts": [{"text": prompt}]}],
+                          "generationConfig": {"temperature": 0,
+                             "responseMimeType": "application/json", "responseJsonSchema": SentimentResponse.model_json_schema()}},
+                    timeout=(10, 35))
+                if not response.ok:
+                    raise ValueError(error_detail(response, key))
+                candidates = response.json().get("candidates", [])
+                if not candidates:
+                    raise ValueError("Gemini no produjo una respuesta validable.")
+                text = "".join(p.get("text", "") for p in candidates[0].get("content", {}).get("parts", []))
+                parsed = validate_response(text, content)
+            except (requests.RequestException, ValueError, TypeError, KeyError) as exc:
+                # No incluir cuerpo ni URL de error; una librería podría adjuntar secretos.
+                status = getattr(response, "status_code", None)
+                detail = f"HTTP {status}" if status is not None else type(exc).__name__
+                log(conn, "Gemini", "error", count, f"{detail}; circuito abierto para este lote; modelo {model}.")
+                if provider == "gemini":
+                    raise ValueError(f"Gemini no disponible ({detail}). Usa SENTIMENT_PROVIDER=auto para FinBERT local.") from None
+                active = "finbert"
+                print(f"Gemini no disponible ({detail}); continúo el lote con FinBERT local.", flush=True)
+        if active == "finbert":
+            try:
+                body = analyze_local(content)
+                parsed = validate_response(json.dumps({"results": body["results"]}), content)
+                used_model, used_version = LOCAL_MODEL, LOCAL_PROMPT_VERSION
+            except (requests.RequestException, ValueError, OSError, KeyError) as exc:
+                log(conn, "FinBERT local", "error", count, f"{type(exc).__name__}; {count} noticias guardadas; pendientes conservadas.")
+                raise ValueError(f"FinBERT local no disponible: {str(exc)[:350]}. Los fallos permanecen pendientes.") from None
         topical_metals = pending[r["id"]]
         rows = [dict(news_id=r["id"], metal=result.metal, score=result.score if result.relevant else None,
                      relevant=int(result.relevant), explanation=result.explanation, evidence=result.evidence,
-                     model=model, prompt_version=PROMPT_VERSION, analyzed_at=now()) for result in parsed.results if result.metal in topical_metals]
+                     model=used_model, prompt_version=used_version, analyzed_at=now()) for result in parsed.results if result.metal in topical_metals]
         upsert(conn, "sentiment", rows)
         count += 1
-        print(f"Gemini: artículo {count} guardado ({', '.join(sorted(topical_metals))}).", flush=True)
-        log(conn, "Gemini noticia", "ok", 1, f"Modelo {model}; noticia {r['id'][:12]}; prompt {PROMPT_VERSION}")
-    log(conn, "Gemini", "ok", count, f"Modelo {model}, prompt {PROMPT_VERSION}")
+        label = "Gemini" if active == "gemini" else "FinBERT local"
+        print(f"{label}: artículo {count} guardado ({', '.join(sorted(topical_metals))}).", flush=True)
+        log(conn, f"{label} noticia", "ok", 1, f"Modelo {used_model}; noticia {r['id'][:12]}; versión {used_version}")
+    log(conn, "Sentimiento", "ok", count, f"Modo {provider}; proveedor final {active}; resultados reales y caché por noticia/metal.")
     return count
