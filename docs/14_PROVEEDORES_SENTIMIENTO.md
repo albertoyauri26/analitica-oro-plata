@@ -1,6 +1,23 @@
 # Sentimiento por metal con continuidad local
 
-La aplicación dispone de dos proveedores: Gemini y una **API HTTP local con FinBERT**. El modo predeterminado `auto` intenta Gemini y, ante su primer error en el lote, continúa las noticias pendientes con FinBERT. No necesita otra cuenta ni una segunda clave para el proveedor local. Los resultados indican el proveedor que realmente respondió.
+La aplicación dispone de dos LLM, **Mistral** y **Gemini**, y de una **API HTTP local con FinBERT**. `SENTIMENT_PROVIDER` en `.env` elige el proveedor:
+
+| Valor | Comportamiento |
+|---|---|
+| `mistral` | Sólo Mistral (LLM). Sin FinBERT: un fallo deja la noticia pendiente para la próxima ejecución. |
+| `gemini` | Sólo Gemini (LLM). Sin FinBERT, igual que `mistral`. |
+| `auto` | Gemini y, si falla tras los reintentos, FinBERT para las noticias pendientes del lote. |
+| `finbert` | Sólo el modelo local. |
+
+Ambos LLM reciben el mismo prompt, devuelven JSON restringido al mismo esquema y pasan la misma validación de evidencia literal. Los resultados indican el proveedor que realmente respondió.
+
+### Mistral
+
+1. Crear una clave en [console.mistral.ai](https://console.mistral.ai). El plan gratuito *Experiment* no pide tarjeta; requiere verificar un teléfono y Mistral puede usar los datos para mejorar sus modelos. El plan de pago no los usa.
+2. En `.env`: `SENTIMENT_PROVIDER=mistral`, `MISTRAL_API_KEY=<clave>` y opcionalmente `MISTRAL_MODEL` (por defecto `ministral-14b-2512`, versión fija incluida en el plan gratuito: 30 solicitudes por minuto; Mistral Small y Medium muestran límite 0 en ese plan).
+3. Verificar sin mostrar la clave: `.\.venv\Scripts\python.exe -m metals.cli mistral-check`.
+
+Las esperas entre noticias (`MISTRAL_MIN_INTERVAL`, 3 s) y los reintentos ante HTTP 503 o 429 por minuto (`MISTRAL_ATTEMPTS`, 3) son configurables. Para Gemini existen `GEMINI_MIN_INTERVAL` y `GEMINI_ATTEMPTS`; su nivel gratuito admite unas 20 solicitudes diarias por modelo.
 
 ## Qué hace cada modelo
 

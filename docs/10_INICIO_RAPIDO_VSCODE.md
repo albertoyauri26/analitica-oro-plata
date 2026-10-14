@@ -4,7 +4,7 @@
 
 1. Abre **Visual Studio Code**.
 2. Selecciona **Archivo → Abrir carpeta**.
-3. Abre `C:\Users\MANUEL ALONSO\Documents\ChatGPT\Analitica predictiva para Oro y Plata,Fun business`.
+3. Abre la carpeta del proyecto (`Analitica predictiva para Oro y Plata,Fun business`), donde la hayas descargado.
 4. Verifica que aparecen `app.py`, `metals`, `docs` y `.venv`.
 5. Abre **Terminal → Nueva terminal**. La terminal debe estar situada en esta misma carpeta.
 

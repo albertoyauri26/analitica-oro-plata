@@ -9,4 +9,5 @@ RUN mkdir -p /app/data /app/artifacts && chown -R user:user /app
 USER user
 ENV PYTHONUNBUFFERED=1
 EXPOSE 7860
-CMD ["python", "-m", "streamlit", "run", "app.py", "--server.address=0.0.0.0", "--server.port=7860"]
+# Render asigna el puerto en $PORT; 7860 queda como valor local y para Hugging Face.
+CMD python -m streamlit run app.py --server.address=0.0.0.0 --server.port=${PORT:-7860}

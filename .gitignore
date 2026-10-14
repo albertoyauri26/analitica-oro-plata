@@ -3,8 +3,12 @@ __pycache__/
 .pytest_cache/
 pytest-cache-files-*/
 .env
-data/
-artifacts/
+# Se publican sólo la base SQLite y los modelos que la app necesita para arrancar (Render construye desde GitHub).
+data/*
+!data/metals.sqlite
+artifacts/*
+!artifacts/gold/
+!artifacts/silver/
 dist/
 *.log
 .coverage

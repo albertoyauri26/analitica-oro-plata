@@ -11,7 +11,7 @@ Trabajaremos en esta secuencia: **instalar → descargar → inspeccionar → co
 Abre Visual Studio Code. Elige **Archivo → Abrir carpeta** y selecciona:
 
 ```text
-C:\Users\MANUEL ALONSO\Documents\ChatGPT\Analitica predictiva para Oro y Plata,Fun business
+C:\ruta\donde\descargaste\Analitica predictiva para Oro y Plata,Fun business
 ```
 
 En el explorador de VS Code debes ver `app.py`, `requirements.txt`, `metals` y `docs`. No crees otra carpeta dentro para copiar los mismos archivos. Abre **Terminal → Nueva terminal**. Usa PowerShell.

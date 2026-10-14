@@ -1,5 +1,9 @@
-"""Dashboard académico: mercado, modelo, decisión y sentimiento real de Gemini."""
+"""Dashboard académico: mercado, modelo, decisión y sentimiento real de un LLM (Mistral o Gemini)."""
+import hmac
 import json
+import os
+import subprocess
+import sys
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -43,7 +47,7 @@ with st.sidebar:
     st.write(f"Sentimiento · {sentiment.news_id.nunique() if not sentiment.empty else 0} artículos analizados")
     if st.button("Actualizar vista", width="stretch"):
         st.rerun()
-    st.caption("Gemini como primera opción; API local FinBERT como respaldo. La vista usa resultados guardados.")
+    st.caption("LLM (Gemini o Mistral) según SENTIMENT_PROVIDER; FinBERT local sólo como respaldo del modo auto. La vista usa resultados guardados.")
     with st.expander("Cómo ejecutar en VS Code"):
         st.code(r".\.venv\Scripts\python.exe -m streamlit run app.py", language="powershell")
         st.write("Guía: docs/01_GUIA_LOCAL.md")
@@ -297,14 +301,14 @@ with tabs[2]:
 
 with tabs[3]:
     st.subheader(f"Noticias y sentimiento · {metal_label}")
-    st.caption("Cinco artículos específicos por metal. Gemini interpreta el contexto; la API local FinBERT aporta tono financiero cuando Gemini falla. Cada resultado identifica su proveedor.")
-    gemini_log = logs[logs.source.str.startswith("Gemini", na=False)].sort_values("id")
-    if len(gemini_log) and gemini_log.iloc[-1].status == "error" and news_context["pending"]:
-        last_error = str(gemini_log.iloc[-1].detail)
+    st.caption("Cinco artículos específicos por metal. Un LLM (Gemini o Mistral, según SENTIMENT_PROVIDER) interpreta el contexto; en modo auto la API local FinBERT aporta tono financiero cuando Gemini falla. Cada resultado identifica su proveedor.")
+    llm_log = logs[logs.source.str.startswith(("Gemini", "Mistral"), na=False)].sort_values("id")
+    if len(llm_log) and llm_log.iloc[-1].status == "error" and news_context["pending"]:
+        last_error, llm_name = str(llm_log.iloc[-1].detail), str(llm_log.iloc[-1].source).split()[0]
         if "429" in last_error:
-            st.warning("Último intento: Google informó cuota agotada (HTTP 429). Los análisis completados se conservan; las noticias pendientes requieren cuota disponible.")
+            st.warning(f"Último intento: {llm_name} informó cuota agotada (HTTP 429). Los análisis completados se conservan; las noticias pendientes requieren cuota disponible.")
         elif "503" in last_error:
-            st.info("Último intento: Gemini informó saturación temporal (HTTP 503). Se conservan los análisis completados.")
+            st.info(f"Último intento: {llm_name} informó saturación temporal (HTTP 503). Se conservan los análisis completados.")
     article_view = recent_articles
     if not article_view.empty:
         recent_mask = pd.to_datetime(article_view.published_at, utc=True, format="ISO8601") >= pd.Timestamp.now(tz="UTC") - pd.Timedelta(days=31)
@@ -358,10 +362,34 @@ with tabs[3]:
     else:
         st.info(f"No hay noticias específicas de {metal_label.lower()} guardadas. Ejecuta la ingesta o importa artículos verificados.")
     with st.expander("Actualizar noticias y análisis desde Visual Studio Code"):
-        st.code(r".\.venv\Scripts\python.exe -m metals.cli gemini-check", language="powershell")
+        st.code(r".\.venv\Scripts\python.exe -m metals.cli mistral-check", language="powershell")
         st.code(r".\.venv\Scripts\python.exe -m metals.cli news-refresh --per-metal 5 --analyze", language="powershell")
         st.caption("Descarga artículos específicos, selecciona hasta cinco por metal y reutiliza análisis ya guardados. Una noticia que trata ambos metales se consulta una sola vez.")
-        st.caption("Gemini usa la clave local de .env. Si falla, la API local FinBERT continúa el lote. La web no muestra claves ni inicia llamadas de pago.")
+        st.caption("El LLM usa la clave local de .env (GEMINI_API_KEY o MISTRAL_API_KEY). Con SENTIMENT_PROVIDER=mistral o gemini no se usa FinBERT: si falla, las noticias quedan pendientes. La web nunca muestra claves.")
+    st.subheader("Probar el análisis en vivo")
+    if st.session_state.get("live_log"):
+        st.code(st.session_state["live_log"])
+    live_password = os.environ.get("APP_PASSWORD", "")
+    if not live_password:
+        st.caption("Desactivado: el servidor no tiene APP_PASSWORD. Sin contraseña nadie puede gastar la cuota del LLM.")
+    else:
+        st.caption("Descarga las noticias más recientes, las analiza con el LLM configurado y recalcula la predicción (1-2 minutos). Al terminar la página se recarga: vuelve a esta pestaña para ver el resultado.")
+        typed = st.text_input("Contraseña de prueba", type="password", key="live_password")
+        if st.button("Actualizar noticias y analizar", key="live_run"):
+            if not hmac.compare_digest(typed.encode(), live_password.encode()):
+                st.error("Contraseña incorrecta.")
+            else:
+                # shortcut: dos clics simultáneos lanzan dos procesos sobre el mismo SQLite; añadir un bloqueo si hay muchos usuarios.
+                output = []
+                with st.spinner("Descargando noticias, analizando y recalculando la predicción…"):
+                    for step in (["news-refresh", "--per-metal", "5", "--analyze"], ["predict"]):
+                        try:
+                            run = subprocess.run([sys.executable, "-m", "metals.cli", *step], cwd=ROOT, capture_output=True, text=True, timeout=600)
+                            output.append(f"$ metals.cli {' '.join(step)}  →  código {run.returncode}\n{(run.stdout + run.stderr)[-2500:]}")
+                        except subprocess.TimeoutExpired:
+                            output.append(f"$ metals.cli {' '.join(step)}  →  superó 10 minutos; se conservan los datos completados.")
+                st.session_state["live_log"] = "\n\n".join(output)
+                st.rerun()
     st.subheader("Contexto de producción minera")
     if production.empty:
         st.info("Sin cifras anuales importadas. El conector USGS está preparado; deben añadirse observaciones verificadas con su fecha de publicación.")

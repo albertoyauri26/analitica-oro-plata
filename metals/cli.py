@@ -18,11 +18,12 @@ def main():
     sub.add_parser("run", help="Ejecutar ingesta, dataset, entrenamiento y predicción")
     sub.add_parser("status", help="Consultar cobertura almacenada")
     sub.add_parser("gemini-check", help="Verificar credencial y modelos disponibles sin mostrar la clave")
+    sub.add_parser("mistral-check", help="Verificar credencial y modelos de Mistral sin mostrar la clave")
     news_refresh = sub.add_parser("news-refresh", help="Recopilar noticias específicas por metal; opcionalmente analizarlas")
     news_refresh.add_argument("--per-metal", type=int, default=5, choices=range(1, 21), metavar="1-20")
-    news_refresh.add_argument("--analyze", action="store_true", help="Gemini con respaldo local FinBERT; Gemini consume cuota")
-    sentiment = sub.add_parser("sentiment", help="Analizar noticias: Gemini y API local alternativa")
-    sentiment.add_argument("--provider", choices=("auto", "gemini", "finbert"), help="Proveedor explícito para esta ejecución; gemini no usa respaldo local")
+    news_refresh.add_argument("--analyze", action="store_true", help="Proveedor de SENTIMENT_PROVIDER en .env; los LLM consumen cuota")
+    sentiment = sub.add_parser("sentiment", help="Analizar noticias: LLM (Gemini o Mistral) y API local alternativa")
+    sentiment.add_argument("--provider", choices=("auto", "gemini", "mistral", "finbert"), help="Proveedor explícito para esta ejecución; gemini y mistral no usan respaldo local")
     news_quantity = sentiment.add_mutually_exclusive_group()
     news_quantity.add_argument("--limit", type=int, choices=range(1, 101), metavar="1-100", help="Límite total de artículos pendientes, modo manual")
     news_quantity.add_argument("--per-metal", type=int, choices=range(1, 21), metavar="1-20", help="Por defecto: 5 por cada metal")
@@ -39,9 +40,9 @@ def main():
     args = parser.parse_args()
     conn = connect()
     try:
-        if args.command == "gemini-check":
+        if args.command in {"gemini-check", "mistral-check"}:
             from .sentiment import check_connection
-            print(json.dumps(check_connection(), ensure_ascii=False, indent=2))
+            print(json.dumps(check_connection(args.command.removesuffix("-check")), ensure_ascii=False, indent=2))
         if args.command in {"ingest", "run"}:
             from .ingest import ingest_all
             ingest_all(conn)

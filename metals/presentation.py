@@ -95,6 +95,8 @@ def provider_name(model):
         return "FinBERT local"
     if "gemini" in name:
         return "Gemini"
+    if "mistral" in name:
+        return "Mistral"
     return str(model) if model and pd.notna(model) else "Pendiente"
 
 def chart(fig, height=350, percent=False):
