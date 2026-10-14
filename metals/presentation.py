@@ -4,6 +4,7 @@ import pandas as pd
 import streamlit as st
 from html import escape
 from .news_filter import filter_news, matched_metals
+from .news_context import first_result
 
 GOLD = "#BE8C16"
 SILVER = "#2873AF"
@@ -120,7 +121,7 @@ def sentiment_view(news, sentiment, metal):
         for col in ("score", "relevant", "explanation", "evidence", "model", "analyzed_at"):
             articles[col] = np.nan
     else:
-        selected = selected.sort_values("analyzed_at").drop_duplicates("news_id", keep="first")
+        selected = first_result(selected)
         articles = articles.merge(selected.drop(columns=["metal"]), left_on="id", right_on="news_id", how="left", validate="one_to_one")
     articles["_published_sort"] = pd.to_datetime(articles.published_at, utc=True, format="ISO8601")
     return articles.sort_values("_published_sort", ascending=False).drop(columns="_published_sort")

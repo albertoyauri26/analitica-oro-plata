@@ -1,6 +1,6 @@
 {
   "metal": "gold",
-  "generated_at": "2026-10-14T17:46:08.105123+00:00",
+  "generated_at": "2026-10-14T17:56:28.510907+00:00",
   "origin": "2026-09-30",
   "target_month": "2026-10-31",
   "source_price_month": "2026-08-31",
@@ -24,7 +24,7 @@
   "rules": "Heurística académica v1; no calibrada con pérdidas financieras.",
   "news_context": {
     "metal": "gold",
-    "as_of": "2026-10-14T17:46:06.802514+00:00",
+    "as_of": "2026-10-14T17:56:27.402901+00:00",
     "window_days": 31,
     "requested": 5,
     "selected": 5,
@@ -91,7 +91,7 @@
         "provider": "ministral-14b-2512"
       }
     ],
-    "score_semantics": "Tono financiero de FinBERT o interpretación contextual de Gemini; no efecto causal del precio.",
+    "score_semantics": "Interpretación contextual de un LLM (Mistral o Gemini) o, sin LLM, tono financiero de FinBERT; no efecto causal del precio.",
     "role": "Contexto actual y escenario experimental separado; no modifica la predicción XGBoost evaluada."
   },
   "news_reading": "El contraste entre noticias y tendencia no es concluyente. El lote todavía está incompleto.",
@@ -100,10 +100,10 @@
     "status": "blocked",
     "experimental": true,
     "validated": false,
-    "generated_at": "2026-10-14T17:46:08.109062+00:00",
+    "generated_at": "2026-10-14T17:56:28.513472+00:00",
     "base_origin": "2026-09-30",
     "target_month": "2026-10-31",
-    "news_as_of": "2026-10-14T17:46:06.802514+00:00",
+    "news_as_of": "2026-10-14T17:56:27.402901+00:00",
     "metal": "gold",
     "baseline_probabilities": {
       "Bajista": 0.2527841627597809,

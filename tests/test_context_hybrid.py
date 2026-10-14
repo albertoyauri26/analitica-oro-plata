@@ -7,6 +7,7 @@ import sqlite3
 import pytest
 from metals.storage import SCHEMA, read, upsert
 from metals.news_context import snapshot
+from metals.presentation import sentiment_view
 from metals.hybrid import combine
 
 NOW = "2026-09-28T12:00:00Z"
@@ -92,6 +93,16 @@ def test_duplicate_providers_do_not_count_as_extra_news(fixture_db):
     assert context["mean_sentiment"] == pytest.approx(0.8)
     assert "another-fixture" not in context["providers"]
     assert combine(base("gold"), context, today=NOW)["status"] == "applied_experimental"
+
+
+def test_llm_analysis_wins_over_an_earlier_finbert_one(fixture_db):
+    prior = read(fixture_db, "sentiment").query("news_id == 'gold-1'").iloc[0].to_dict()
+    assert prior["model"] == "ProsusAI/finbert"
+    upsert(fixture_db, "sentiment", [{**prior, "model": "ministral-fixture", "analyzed_at": "2026-09-27T03:00:00Z", "score": 0.5}])
+    context = snapshot(read(fixture_db, "news"), read(fixture_db, "sentiment"), "gold", at=NOW)
+    assert context["providers"] == {"gemini-fixture": 3, "ministral-fixture": 1, "ProsusAI/finbert": 1}
+    view = sentiment_view(read(fixture_db, "news"), read(fixture_db, "sentiment"), "gold")
+    assert view.set_index("id").loc["gold-1", "model"] == "ministral-fixture"
 
 
 def test_news_and_sentiment_for_other_metal_cannot_complete_a_missing_batch(fixture_db):
