@@ -325,13 +325,15 @@ with tabs[3]:
             plot["Tono"] = plot.score.map(lambda x: "Positivo" if x > 0.1 else "Negativo" if x < -0.1 else "Mixto / neutral")
             plot["Artículo"] = [f"Noticia {i+1} · {date:%d/%m}" for i,date in enumerate(plot.Fecha)]
             plot["Proveedor"] = plot.model.map(provider_name)
-            fig = px.bar(plot, x="score", y="Artículo", orientation="h", color="Tono", hover_data=["title", "Proveedor"], color_discrete_map={"Positivo": GREEN, "Negativo": RED, "Mixto / neutral": SILVER}, labels={"score": "Tono financiero · −1 a +1"}, range_x=[-1, 1], title="Sentimiento de cada noticia")
+            fig = px.bar(plot, x="score", y="Artículo", orientation="h", color="Tono", hover_data=["title", "Proveedor"], color_discrete_map={"Positivo": GREEN, "Negativo": RED, "Mixto / neutral": SILVER}, labels={"score": "Sentimiento · −1 a +1"}, range_x=[-1.15, 1.15], title="Sentimiento de cada noticia")
+            # Un score 0 es una barra de largo cero: el valor como texto lo mantiene visible.
+            fig.update_traces(texttemplate="%{x:+.2f}", textposition="outside", cliponaxis=False)
             fig.add_vline(x=0, line_color="#95a8bd", line_dash="dot")
             chart(fig, 320)
         else:
             st.info("No hay sentimiento relevante disponible en esta ventana. Una noticia pendiente o no relevante no se convierte en Neutral.")
         providers_text = " · ".join(f"{provider_name(name)}: {count}" for name,count in news_context.get("providers", {}).items())
-        st.caption(f"Análisis guardados en el lote: {providers_text or 'ninguno'}. FinBERT clasifica tono del texto; su relevancia temática proviene del filtro. No estima causalidad sobre precios.")
+        st.caption(f"Análisis guardados en el lote: {providers_text or 'ninguno'}. El LLM interpreta cada noticia para el precio del metal: −1 desfavorable, 0 neutral o sin efecto claro, +1 favorable. No estima causalidad sobre precios.")
         if news_context["missing_articles"]:
             st.info(f"Faltan {news_context['missing_articles']} artículos específicos recientes para completar el lote de cinco. No se rellena con noticias de otros temas.")
         mode = st.radio("Mostrar noticias", ["Todas", "Analizadas", "Pendientes"], horizontal=True)
