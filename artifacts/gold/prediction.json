@@ -1,6 +1,6 @@
 {
   "metal": "gold",
-  "generated_at": "2026-10-14T17:56:28.510907+00:00",
+  "generated_at": "2026-10-14T21:53:55.309938+00:00",
   "origin": "2026-09-30",
   "target_month": "2026-10-31",
   "source_price_month": "2026-08-31",
@@ -24,13 +24,13 @@
   "rules": "Heurística académica v1; no calibrada con pérdidas financieras.",
   "news_context": {
     "metal": "gold",
-    "as_of": "2026-10-14T17:56:27.402901+00:00",
+    "as_of": "2026-10-14T21:53:55.073431+00:00",
     "window_days": 31,
     "requested": 5,
     "selected": 5,
-    "analyzed": 3,
-    "relevant": 3,
-    "pending": 2,
+    "analyzed": 4,
+    "relevant": 2,
+    "pending": 1,
     "missing_articles": 0,
     "mean_sentiment": 0.0,
     "tone": "Mixto / neutral",
@@ -42,14 +42,14 @@
       "df22e869e30bfc36b84da89b2149a64861502a6b16c3a67059e22503ab8ee87b"
     ],
     "providers": {
-      "ministral-14b-2512": 3
+      "ministral-14b-2512": 4
     },
     "article_audit": [
       {
         "id": "e9967c4d9a8eb056f2bc8a8f39675aaf64ad469cf72026343b9ab6a6344cfda9",
         "published_at": "2026-10-14T14:42:18+00:00",
         "fetched_at": "2026-10-14T15:18:09.997151+00:00",
-        "analyzed_at": "2026-10-14T15:18:15.026775+00:00",
+        "analyzed_at": "2026-10-14T21:53:19.323534+00:00",
         "relevant": true,
         "score": 0.0,
         "provider": "ministral-14b-2512"
@@ -58,9 +58,9 @@
         "id": "7e43ca503381a409e35a97efe59cbfadb05132e1f9d6f3d634437617dac9dd0b",
         "published_at": "2026-10-14T11:00:33+00:00",
         "fetched_at": "2026-10-14T15:18:09.997151+00:00",
-        "analyzed_at": "2026-10-14T15:18:18.251149+00:00",
-        "relevant": true,
-        "score": 0.0,
+        "analyzed_at": "2026-10-14T21:53:22.265824+00:00",
+        "relevant": false,
+        "score": null,
         "provider": "ministral-14b-2512"
       },
       {
@@ -76,18 +76,18 @@
         "id": "b32dee80d63595487bb4d92b0699f3adce401184020e89d996c9d25b801e9aa4",
         "published_at": "2026-10-13T19:15:24+00:00",
         "fetched_at": "2026-10-14T15:18:09.997151+00:00",
-        "analyzed_at": null,
-        "relevant": null,
-        "score": null,
-        "provider": null
+        "analyzed_at": "2026-10-14T21:53:28.476422+00:00",
+        "relevant": true,
+        "score": 0.0,
+        "provider": "ministral-14b-2512"
       },
       {
         "id": "df22e869e30bfc36b84da89b2149a64861502a6b16c3a67059e22503ab8ee87b",
         "published_at": "2026-10-13T19:05:05+00:00",
         "fetched_at": "2026-10-14T15:18:09.997151+00:00",
-        "analyzed_at": "2026-10-14T15:18:27.854415+00:00",
-        "relevant": true,
-        "score": 0.0,
+        "analyzed_at": "2026-10-14T21:53:31.363360+00:00",
+        "relevant": false,
+        "score": null,
         "provider": "ministral-14b-2512"
       }
     ],
@@ -100,10 +100,10 @@
     "status": "blocked",
     "experimental": true,
     "validated": false,
-    "generated_at": "2026-10-14T17:56:28.513472+00:00",
+    "generated_at": "2026-10-14T21:53:55.313101+00:00",
     "base_origin": "2026-09-30",
     "target_month": "2026-10-31",
-    "news_as_of": "2026-10-14T17:56:27.402901+00:00",
+    "news_as_of": "2026-10-14T21:53:55.073431+00:00",
     "metal": "gold",
     "baseline_probabilities": {
       "Bajista": 0.2527841627597809,
@@ -131,6 +131,7 @@
     "reasons": [
       "Falta completar o fechar el análisis de una de las cinco noticias.",
       "Se requieren cinco noticias analizadas antes de combinar la predicción.",
+      "Se requieren al menos tres noticias relevantes con sentimiento válido para este metal.",
       "La cobertura declarada no coincide con los cinco análisis auditados."
     ],
     "baseline_reasons": [
@@ -148,7 +149,7 @@
       "max_snapshot_age_hours": 24,
       "formula": "h=(1-a)*p+a*q; a=peso*(relevantes/5)*abs(sentimiento)",
       "neutral_probability": "Se conserva la probabilidad Neutral del modelo base.",
-      "relevant_articles": 3,
+      "relevant_articles": 2,
       "mean_sentiment": 0.0
     },
     "limitations": [

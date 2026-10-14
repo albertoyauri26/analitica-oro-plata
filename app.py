@@ -16,12 +16,14 @@ from metals.presentation import style, chart, sentiment_view, summary_card, news
 from metals.explain import FEATURE_LABELS, feature_table, model_parameters
 from metals.news_filter import filter_news
 from metals.news_context import snapshot as news_snapshot
+from metals.sentiment import active_results
 
 st.set_page_config(page_title="Aurum | Oro y plata", page_icon="◈", layout="wide")
 style()
 conn = connect()
 try:
     prices, macro, news, sentiment, production, logs = [read(conn, t) for t in ("prices", "macro", "news", "sentiment", "production", "ingestion_log")]
+    sentiment = active_results(sentiment)
     dataset = build_dataset(conn, save=False) if not prices.empty else None
 except ValueError as exc:
     dataset = None
@@ -333,7 +335,7 @@ with tabs[3]:
         else:
             st.info("No hay sentimiento relevante disponible en esta ventana. Una noticia pendiente o no relevante no se convierte en Neutral.")
         providers_text = " · ".join(f"{provider_name(name)}: {count}" for name,count in news_context.get("providers", {}).items())
-        st.caption(f"Análisis guardados en el lote: {providers_text or 'ninguno'}. El LLM interpreta cada noticia para el precio del metal: −1 desfavorable, 0 neutral o sin efecto claro, +1 favorable. No estima causalidad sobre precios.")
+        st.caption(f"Análisis guardados en el lote: {providers_text or 'ninguno'}. El LLM interpreta qué sugiere cada noticia para el precio del metal: +1 que sube, −1 que baja, 0 neutral o sin efecto claro. No estima causalidad sobre precios.")
         if news_context["missing_articles"]:
             st.info(f"Faltan {news_context['missing_articles']} artículos específicos recientes para completar el lote de cinco. No se rellena con noticias de otros temas.")
         mode = st.radio("Mostrar noticias", ["Todas", "Analizadas", "Pendientes"], horizontal=True)

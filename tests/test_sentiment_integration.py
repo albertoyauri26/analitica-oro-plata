@@ -144,6 +144,18 @@ def test_mistral_failure_keeps_news_pending_without_finbert(monkeypatch):
     assert "fixture-mistral-key" not in detail
     conn.close()
 
+def test_mistral_batch_ignores_older_gemini_analysis(monkeypatch):
+    rows = [dict(metal="gold", relevant=True, score=0.6, explanation="Prueba", evidence="Gold prices rose"),
+            dict(metal="silver", relevant=True, score=0.0, explanation="Prueba", evidence="Silver was flat")]
+    conn, client = mistral_fixture(monkeypatch, [Reply(200, {"choices": [{"message": {"content": json.dumps({"results": rows})}}]})])
+    upsert(conn, "sentiment", [dict(news_id="n1", metal=m, score=1.0, relevant=1, explanation="Gemini antiguo", evidence="Gold prices rose",
+                                    model="gemini-fixture", prompt_version=sentiment.PROMPT_VERSION, analyzed_at="2020-02-03") for m in ("gold", "silver")])
+    assert sentiment.analyze(conn, limit=1, provider="mistral") == 1
+    assert client.calls == 1
+    monkeypatch.setenv("SENTIMENT_PROVIDER", "mistral")
+    assert set(sentiment.active_results(read(conn, "sentiment")).model) == {"mistral-fixture"}
+    conn.close()
+
 @pytest.mark.parametrize("evidence, expected", [
     ("'gold and critical'", "gold and critical"),
     ("copper/**gold** mine", "copper/gold mine"),

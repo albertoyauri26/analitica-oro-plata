@@ -85,8 +85,9 @@ def main():
         if args.command in {"predict", "run"}:
             from .decision import predict
             from .news_context import snapshot
+            from .sentiment import active_results
             for metal in ("gold", "silver"):
-                context = snapshot(read(conn, "news"), read(conn, "sentiment"), metal)
+                context = snapshot(read(conn, "news"), active_results(read(conn, "sentiment")), metal)
                 print(json.dumps(predict(dataset, metal, news_context=context, hybrid_weight=getattr(args, "news_weight", 0.15)), indent=2, ensure_ascii=False))
         if args.command == "status":
             for table in ("prices", "macro", "news", "sentiment", "production"):

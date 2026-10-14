@@ -9,6 +9,7 @@ sys.path.insert(0, str(ROOT))
 from metals.storage import connect, read, now
 from metals.news_filter import filter_news
 from metals.news_context import snapshot
+from metals.sentiment import active_results
 
 
 def write(tests_passed=None):
@@ -28,7 +29,7 @@ def write(tests_passed=None):
              "", "La plata mejora accuracy y macro-F1 respecto de la versión anterior, pero disminuye su precisión macro. El oro no mejora. Consulta [comparación completa](12_MODELO_Y_METRICAS.md).", "", "## Noticias y Gemini", "",
              "| Metal | Seleccionadas | Analizadas | Relevantes | Pendientes | Score medio |", "|---|---:|---:|---:|---:|---:|"]
     for metal in reports:
-        context = snapshot(tables["news"], tables["sentiment"], metal)
+        context = snapshot(tables["news"], active_results(tables["sentiment"]), metal)
         score_text = "Sin dato" if context["mean_sentiment"] is None else f"{context['mean_sentiment']:+.2f}"
         text.append(f"| {metal} | {context['selected']}/5 | {context['analyzed']} | {context['relevant']} | {context['pending']} | {score_text} |")
     gemini_logs = tables["ingestion_log"][tables["ingestion_log"].source.str.startswith("Gemini", na=False)].sort_values("id")
