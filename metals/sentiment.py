@@ -1,6 +1,7 @@
 """Gemini y API local FinBERT: resultados reales, caché y continuidad por lote."""
 import json
 import os
+import time
 from typing import Literal
 import requests
 from dotenv import load_dotenv
@@ -13,11 +14,60 @@ from .local_sentiment_api import analyze_local
 import pandas as pd
 
 PROMPT_VERSION = "metals-v1"
+TRANSIENT_STATUS = {500, 502, 503, 504}
+sleep = time.sleep
 
 def api_session():
-    # Un intento por artículo. Ante el primer fallo se abre el circuito del lote.
-    # Nunca reintentar 429 ni agotar la cuota intentando otros modelos remotos.
+    # Si Gemini sigue fallando tras los reintentos de gemini_post se abre el circuito del lote.
+    # Nunca agotar la cuota diaria ni probar otros modelos remotos.
     return requests.Session()
+
+def env_number(name, default, low, high):
+    try:
+        return min(max(float(os.environ.get(name, default)), low), high)
+    except ValueError:
+        return default
+
+def quota_retry_delay(response):
+    """Espera sugerida por Google para una cuota por minuto; None si es diaria o no la informa."""
+    try:
+        details = response.json().get("error", {}).get("details", [])
+    except (ValueError, AttributeError):
+        return None
+    delay, daily = None, False
+    for detail in details if isinstance(details, list) else []:
+        kind = str(detail.get("@type", ""))
+        if kind.endswith("RetryInfo"):
+            try:
+                delay = float(str(detail.get("retryDelay", "")).rstrip("s"))
+            except ValueError:
+                pass
+        elif kind.endswith("QuotaFailure"):
+            daily |= any("PerDay" in str(v.get("quotaId", "")) for v in detail.get("violations", []))
+    return None if daily or delay is None or delay > 90 else delay
+
+def gemini_post(session, url, attempts, **kwargs):
+    """Reintenta saturaciones temporales (503) y cuotas por minuto; devuelve la última respuesta.
+    Pocos intentos y esperas largas: en el nivel gratuito los fallos también gastan la cuota diaria."""
+    for attempt in range(1, attempts + 1):
+        try:
+            response = session.post(url, **kwargs)
+        except (requests.ConnectionError, requests.Timeout):
+            if attempt == attempts:
+                raise
+            wait, reason = 10 * 3 ** (attempt - 1), "sin conexión"
+        else:
+            status = getattr(response, "status_code", None)
+            if response.ok or attempt == attempts:
+                return response
+            if status in TRANSIENT_STATUS:
+                wait, reason = 10 * 3 ** (attempt - 1), f"HTTP {status}, saturación temporal"
+            elif status == 429 and (delay := quota_retry_delay(response)) is not None:
+                wait, reason = delay + 1, "HTTP 429, cuota por minuto"
+            else:
+                return response
+        print(f"Gemini: {reason}; reintento {attempt + 1}/{attempts} en {wait:.0f} s.", flush=True)
+        sleep(wait)
 
 def configuration():
     load_dotenv(ROOT / ".env", override=True)
@@ -115,6 +165,10 @@ def analyze(conn, limit=5, source=None, per_metal=None, provider=None):
                 raise
             active = "finbert"
             log(conn, "Gemini", "warning", 0, "Sin configuración válida: se usa FinBERT local.")
+    # Nivel gratuito: pocas solicitudes por minuto. Espaciar evita el 429 antes de que ocurra.
+    attempts = int(env_number("GEMINI_ATTEMPTS", 3, 1, 6))
+    interval = env_number("GEMINI_MIN_INTERVAL", 13, 0, 120)
+    last_request = None
     count = 0
     for r in articles.to_dict("records"):
         content = r["title"] + "\n" + r["summary"]
@@ -130,9 +184,12 @@ def analyze(conn, limit=5, source=None, per_metal=None, provider=None):
         used_model, used_version = model, PROMPT_VERSION
         if active == "gemini":
             response = None
+            if last_request is not None and (wait := interval - (time.monotonic() - last_request)) > 0:
+                sleep(wait)
+            last_request = time.monotonic()
             try:
-                response = api_session().post(
-                    f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
+                response = gemini_post(api_session(),
+                    f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent", attempts,
                     headers={"x-goog-api-key": key, "Content-Type": "application/json"},
                     json={"contents": [{"parts": [{"text": prompt}]}],
                           "generationConfig": {"temperature": 0,
