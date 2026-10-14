@@ -7,6 +7,27 @@ import requests
 from .config import ARTIFACTS, DATA, SERIES
 from .storage import connect, read
 
+def news_refresh(conn, per_metal=5, analyze_news=False):
+    from .news_sources import fetch_targeted_news
+    from .storage import upsert, log
+    rows, diagnostics = fetch_targeted_news(per_metal=per_metal)
+    upsert(conn, "news", rows)
+    print(json.dumps(diagnostics, ensure_ascii=False, indent=2))
+    log(conn, "Noticias por metal", "ok" if rows else "empty", len(rows), json.dumps(diagnostics, ensure_ascii=False)[:1500])
+    for result in diagnostics["sources"]:
+        log(conn, result["source"], result["status"], result["rows"], result["detail"], result["sha256"])
+    if analyze_news:
+        from .sentiment import analyze
+        print(f"Noticias analizadas: {analyze(conn, per_metal=per_metal)}")
+
+def predict_metals(conn, dataset, news_weight=0.15):
+    from .decision import predict
+    from .news_context import snapshot
+    from .sentiment import active_results
+    for metal in ("gold", "silver"):
+        context = snapshot(read(conn, "news"), active_results(read(conn, "sentiment")), metal)
+        print(json.dumps(predict(dataset, metal, news_context=context, hybrid_weight=news_weight), indent=2, ensure_ascii=False))
+
 def main():
     parser = argparse.ArgumentParser(description="Sistema académico de analítica predictiva para oro y plata")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -62,17 +83,7 @@ def main():
             from .sentiment import analyze
             print(f"Noticias analizadas: {analyze(conn, args.limit or 5, args.source, per_metal=None if args.limit else args.per_metal or 5, provider=args.provider)}")
         if args.command == "news-refresh":
-            from .news_sources import fetch_targeted_news
-            from .storage import upsert, log
-            rows, diagnostics = fetch_targeted_news(per_metal=args.per_metal)
-            upsert(conn, "news", rows)
-            print(json.dumps(diagnostics, ensure_ascii=False, indent=2))
-            log(conn, "Noticias por metal", "ok" if rows else "empty", len(rows), json.dumps(diagnostics, ensure_ascii=False)[:1500])
-            for result in diagnostics["sources"]:
-                log(conn, result["source"], result["status"], result["rows"], result["detail"], result["sha256"])
-            if args.analyze:
-                from .sentiment import analyze
-                print(f"Noticias analizadas: {analyze(conn, per_metal=args.per_metal)}")
+            news_refresh(conn, args.per_metal, args.analyze)
         if args.command in {"build", "train", "predict", "run"}:
             from .features import build_dataset
             dataset = build_dataset(conn)
@@ -83,12 +94,7 @@ def main():
                 report = train_metal(dataset, metal)
                 print(f"{metal}: macro-F1 holdout = {report['xgboost']['macro_f1']:.3f}")
         if args.command in {"predict", "run"}:
-            from .decision import predict
-            from .news_context import snapshot
-            from .sentiment import active_results
-            for metal in ("gold", "silver"):
-                context = snapshot(read(conn, "news"), active_results(read(conn, "sentiment")), metal)
-                print(json.dumps(predict(dataset, metal, news_context=context, hybrid_weight=getattr(args, "news_weight", 0.15)), indent=2, ensure_ascii=False))
+            predict_metals(conn, dataset, getattr(args, "news_weight", 0.15))
         if args.command == "status":
             for table in ("prices", "macro", "news", "sentiment", "production"):
                 frame = read(conn, table)

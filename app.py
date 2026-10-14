@@ -1,10 +1,12 @@
 """Dashboard académico: mercado, modelo, decisión y sentimiento real de un LLM (Mistral o Gemini)."""
 import hmac
+import io
 import json
 import os
-import subprocess
-import sys
+import sqlite3
+from contextlib import closing, redirect_stdout
 import pandas as pd
+import requests
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
@@ -17,6 +19,7 @@ from metals.explain import FEATURE_LABELS, feature_table, model_parameters
 from metals.news_filter import filter_news
 from metals.news_context import snapshot as news_snapshot
 from metals.sentiment import active_results
+from metals.cli import news_refresh, predict_metals
 
 st.set_page_config(page_title="Aurum | Oro y plata", page_icon="◈", layout="wide")
 style()
@@ -384,14 +387,20 @@ with tabs[3]:
                 st.error("Contraseña incorrecta.")
             else:
                 # shortcut: dos clics simultáneos lanzan dos procesos sobre el mismo SQLite; añadir un bloqueo si hay muchos usuarios.
+                # En el mismo proceso: un segundo intérprete de Python superaba los 512 MB del plan gratuito de Render.
                 output = []
-                with st.spinner("Descargando noticias, analizando y recalculando la predicción…"):
-                    for step in (["news-refresh", "--per-metal", "5", "--analyze"], ["predict"]):
-                        try:
-                            run = subprocess.run([sys.executable, "-m", "metals.cli", *step], cwd=ROOT, capture_output=True, text=True, timeout=600)
-                            output.append(f"$ metals.cli {' '.join(step)}  →  código {run.returncode}\n{(run.stdout + run.stderr)[-2500:]}")
-                        except subprocess.TimeoutExpired:
-                            output.append(f"$ metals.cli {' '.join(step)}  →  superó 10 minutos; se conservan los datos completados.")
+                steps = (("news-refresh --per-metal 5 --analyze", lambda live: news_refresh(live, 5, True)),
+                         ("predict", lambda live: predict_metals(live, build_dataset(live))))
+                with st.spinner("Descargando noticias, analizando y recalculando la predicción…"), closing(connect()) as live:
+                    for label, step in steps:
+                        buffer, code = io.StringIO(), 0
+                        with redirect_stdout(buffer):
+                            try:
+                                step(live)
+                            except (ValueError, FileNotFoundError, sqlite3.Error, requests.RequestException) as exc:
+                                print(f"ERROR: {exc}")
+                                code = 1
+                        output.append(f"$ metals.cli {label}  →  código {code}\n{buffer.getvalue()[-2500:]}")
                 st.session_state["live_log"] = "\n\n".join(output)
                 st.rerun()
     st.subheader("Contexto de producción minera")
