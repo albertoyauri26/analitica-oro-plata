@@ -10,7 +10,7 @@ from sklearn.model_selection import TimeSeriesSplit
 from sklearn.utils.class_weight import compute_sample_weight
 from xgboost import XGBClassifier
 from .config import ARTIFACTS, CORE_FEATURES, EXTRA_FEATURES, LABELS, THRESHOLDS
-from .storage import now, save_json
+from .storage import now, save_json, dataset_sha256
 
 def estimator(params):
     options = dict(objective="multi:softprob", num_class=3, eval_metric="mlogloss",
@@ -173,7 +173,7 @@ def train_metal(dataset, metal, destination=ARTIFACTS):
     final.save_model(path / "model.json")
     report["model_sha256"] = hashlib.sha256((path / "model.json").read_bytes()).hexdigest()
     report["final_train"] = {"start": str(known.date.min().date()), "end": str(known.date.max().date()), "n": len(known), "origin": str(origin.date()), "label_available_max": str(known.label_available_at.max().date())}
-    report["dataset_sha256"] = hashlib.sha256(dataset.to_csv(index=False).encode()).hexdigest()
+    report["dataset_sha256"] = dataset_sha256(dataset)
     report["class_counts"] = {LABELS[int(k)]: int(v) for k, v in known.target.value_counts().items()}
     save_json(path / "report.json", report)
     return report

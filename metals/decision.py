@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from xgboost import XGBClassifier
 from .config import ARTIFACTS, LABELS
-from .storage import now, save_json
+from .storage import now, save_json, dataset_sha256
 
 def risk_and_signal(row, probabilities, report, today=None):
     p = np.asarray(probabilities, dtype=float)
@@ -68,8 +68,7 @@ def predict(dataset, metal, destination=ARTIFACTS, save=True, news_context=None,
         raise ValueError("Modelo entrenado con etiquetas posteriores al origen.")
     if pd.Timestamp(report["final_train"]["origin"]) != row.date:
         raise ValueError("El dataset cambió de mes; reentrena para emitir una nueva predicción.")
-    digest = hashlib.sha256(dataset.to_csv(index=False).encode()).hexdigest()
-    if digest != report["dataset_sha256"]:
+    if dataset_sha256(dataset) != report["dataset_sha256"]:
         raise ValueError("El dataset cambió desde el entrenamiento. Ejecuta train antes de predict.")
     model = XGBClassifier()
     model.load_model(path / "model.json")

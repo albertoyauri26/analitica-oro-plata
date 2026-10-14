@@ -1,6 +1,6 @@
 {
   "metal": "silver",
-  "generated_at": "2026-10-14T15:18:35.716062+00:00",
+  "generated_at": "2026-10-14T17:46:08.282641+00:00",
   "origin": "2026-09-30",
   "target_month": "2026-10-31",
   "source_price_month": "2026-08-31",
@@ -22,7 +22,7 @@
   "rules": "Heurística académica v1; no calibrada con pérdidas financieras.",
   "news_context": {
     "metal": "silver",
-    "as_of": "2026-10-14T15:18:35.649910+00:00",
+    "as_of": "2026-10-14T17:46:08.121998+00:00",
     "window_days": 31,
     "requested": 5,
     "selected": 5,
@@ -99,10 +99,10 @@
     "status": "applied_experimental",
     "experimental": true,
     "validated": false,
-    "generated_at": "2026-10-14T15:18:35.716565+00:00",
+    "generated_at": "2026-10-14T17:46:08.284677+00:00",
     "base_origin": "2026-09-30",
     "target_month": "2026-10-31",
-    "news_as_of": "2026-10-14T15:18:35.649910+00:00",
+    "news_as_of": "2026-10-14T17:46:08.121998+00:00",
     "metal": "silver",
     "baseline_probabilities": {
       "Bajista": 0.6496156454086304,

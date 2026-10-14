@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from metals.config import CORE_FEATURES
-from metals.storage import SCHEMA, upsert, read
+from metals.storage import SCHEMA, upsert, read, dataset_sha256
 from metals.features import classify, technical, monthly_macro, build_dataset, add_context
 from metals.decision import risk_and_signal
 from metals.modeling import temporal_folds
@@ -154,3 +154,12 @@ def test_rss_numeric_published_date(db, monkeypatch):
     monkeypatch.setattr(ingest, "download", lambda *args: (body, "test"))
     assert ingest.news(db, "test", "https://example.org/feed") == 1
     assert read(db, "news").iloc[0].published_at.startswith("2020-09-23")
+
+
+def test_dataset_fingerprint_is_the_same_on_windows_and_linux(monkeypatch):
+    frame = pd.DataFrame({"date": ["2026-01-31", "2026-02-28"], "value": [1.5, 2.25]})
+    digests = set()
+    for separator in ("\r\n", "\n"):
+        monkeypatch.setattr("os.linesep", separator)
+        digests.add(dataset_sha256(frame))
+    assert len(digests) == 1

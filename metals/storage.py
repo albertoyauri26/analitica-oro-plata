@@ -1,4 +1,5 @@
 """SQLite almacena datos normalizados y conserva la trazabilidad de ingesta."""
+import hashlib
 import json
 import sqlite3
 from datetime import datetime, timezone
@@ -65,6 +66,10 @@ def read(conn, table):
     if table not in {"prices", "macro", "news", "sentiment", "production", "ingestion_log"}:
         raise ValueError("Tabla no permitida")
     return pd.read_sql_query(f"SELECT * FROM {table}", conn)
+
+def dataset_sha256(dataset):
+    # Finales de línea fijos: la huella debe coincidir entre Windows (entrenamiento) y Linux (Render).
+    return hashlib.sha256(dataset.to_csv(index=False, lineterminator="\n").encode()).hexdigest()
 
 def save_json(path, payload):
     path.parent.mkdir(parents=True, exist_ok=True)
