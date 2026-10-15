@@ -81,7 +81,7 @@ def combine(base_prediction, news_context, weight=0.15, today=None):
         "limitations": [
             "Escenario experimental con probabilidades orientativas: no fue entrenado ni validado temporalmente.",
             "El tono financiero no demuestra impacto causal ni dirección futura del precio; la asociación es una hipótesis.",
-            "FinBERT clasifica tono positivo, negativo o neutral del texto, no retorno de oro o plata.",
+            "El LLM (o FinBERT, si se usa) interpreta el texto de cada noticia; no observa el retorno de oro o plata.",
             "Las métricas de accuracy, precisión y F1 corresponden sólo a XGBoost, nunca a esta mezcla.",
             "Noticias recientes actualizan este escenario a su fecha de emisión; no modifican predicciones ni evaluaciones históricas.",
             "La mezcla no eleva la confianza de decisión ni cambia la señal o el riesgo base, incluso si cambia la tendencia mostrada.",

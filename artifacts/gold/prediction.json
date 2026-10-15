@@ -1,6 +1,6 @@
 {
   "metal": "gold",
-  "generated_at": "2026-10-14T22:06:41.219125+00:00",
+  "generated_at": "2026-10-15T05:45:23.698920+00:00",
   "origin": "2026-09-30",
   "target_month": "2026-10-31",
   "source_price_month": "2026-08-31",
@@ -24,15 +24,15 @@
   "rules": "Heurística académica v1; no calibrada con pérdidas financieras.",
   "news_context": {
     "metal": "gold",
-    "as_of": "2026-10-14T22:06:41.176876+00:00",
+    "as_of": "2026-10-15T05:45:23.541318+00:00",
     "window_days": 31,
     "requested": 5,
     "selected": 5,
     "analyzed": 5,
-    "relevant": 3,
+    "relevant": 1,
     "pending": 0,
     "missing_articles": 0,
-    "mean_sentiment": 0.3333333333333333,
+    "mean_sentiment": 0.5,
     "tone": "Positivo",
     "news_ids": [
       "e9967c4d9a8eb056f2bc8a8f39675aaf64ad469cf72026343b9ab6a6344cfda9",
@@ -49,16 +49,16 @@
         "id": "e9967c4d9a8eb056f2bc8a8f39675aaf64ad469cf72026343b9ab6a6344cfda9",
         "published_at": "2026-10-14T20:40:18+00:00",
         "fetched_at": "2026-10-14T15:18:09.997151+00:00",
-        "analyzed_at": "2026-10-14T21:53:19.323534+00:00",
+        "analyzed_at": "2026-10-15T05:38:45.539320+00:00",
         "relevant": true,
-        "score": 0.0,
+        "score": 0.5,
         "provider": "ministral-14b-2512"
       },
       {
         "id": "7e43ca503381a409e35a97efe59cbfadb05132e1f9d6f3d634437617dac9dd0b",
         "published_at": "2026-10-14T20:30:33+00:00",
         "fetched_at": "2026-10-14T15:18:09.997151+00:00",
-        "analyzed_at": "2026-10-14T21:53:22.265824+00:00",
+        "analyzed_at": "2026-10-15T05:38:47.583479+00:00",
         "relevant": false,
         "score": null,
         "provider": "ministral-14b-2512"
@@ -67,25 +67,25 @@
         "id": "f06b8f5f6cf822e5e76074a2cb2a27784c0ee68a06ee05643b7d0ef8750c4e93",
         "published_at": "2026-10-14T20:20:19+00:00",
         "fetched_at": "2026-10-14T22:06:29.501294+00:00",
-        "analyzed_at": "2026-10-14T22:06:34.465000+00:00",
-        "relevant": true,
-        "score": 1.0,
+        "analyzed_at": "2026-10-15T05:38:51.272769+00:00",
+        "relevant": false,
+        "score": null,
         "provider": "ministral-14b-2512"
       },
       {
         "id": "a916200e3027cb3c4464b0095abec0d9b1c7a757d9649a8a137a77d8d6599b40",
         "published_at": "2026-10-14T20:00:02+00:00",
         "fetched_at": "2026-10-14T22:06:29.501294+00:00",
-        "analyzed_at": "2026-10-14T22:06:37.432698+00:00",
-        "relevant": true,
-        "score": 0.0,
+        "analyzed_at": "2026-10-15T05:38:53.546629+00:00",
+        "relevant": false,
+        "score": null,
         "provider": "ministral-14b-2512"
       },
       {
         "id": "7ef8ab4f51ea50129c3b18d3d22b7c5d91727b84c36a800ef7eb558fd569a6c8",
         "published_at": "2026-10-14T14:17:08+00:00",
         "fetched_at": "2026-10-14T22:06:29.501294+00:00",
-        "analyzed_at": "2026-10-14T22:06:40.682952+00:00",
+        "analyzed_at": "2026-10-15T05:38:57.909782+00:00",
         "relevant": false,
         "score": null,
         "provider": "ministral-14b-2512"
@@ -97,13 +97,13 @@
   "news_reading": "El tono de las noticias coincide con la dirección de la tendencia; no aumenta por sí mismo la probabilidad del modelo.",
   "hybrid": {
     "version": "hybrid_scenario_v1",
-    "status": "applied_experimental",
+    "status": "blocked",
     "experimental": true,
     "validated": false,
-    "generated_at": "2026-10-14T22:06:41.221135+00:00",
+    "generated_at": "2026-10-15T05:45:23.702373+00:00",
     "base_origin": "2026-09-30",
     "target_month": "2026-10-31",
-    "news_as_of": "2026-10-14T22:06:41.176876+00:00",
+    "news_as_of": "2026-10-15T05:45:23.541318+00:00",
     "metal": "gold",
     "baseline_probabilities": {
       "Bajista": 0.2527841627597809,
@@ -111,25 +111,25 @@
       "Alcista": 0.38180121779441833
     },
     "hybrid_probabilities": {
-      "Bajista": 0.24520063787698745,
+      "Bajista": 0.2527841627597809,
       "Neutral": 0.3654145896434784,
-      "Alcista": 0.38938474267721174
+      "Alcista": 0.38180121779441833
     },
     "baseline_trend": "Alcista",
     "trend": "Alcista",
     "requested_weight": 0.15,
-    "applied_weight": 0.03,
+    "applied_weight": 0.0,
     "probability_changes": {
-      "Bajista": -0.00758352488279343,
+      "Bajista": 0.0,
       "Neutral": 0.0,
-      "Alcista": 0.007583524882793402
+      "Alcista": 0.0
     },
     "baseline_confidence": 0.38180121779441833,
     "signal": "Abstenerse",
     "risk": "Medio",
     "decision_uses_hybrid": false,
     "reasons": [
-      "Lote completo y vigente: se aplica una hipótesis direccional acotada, sin cambiar la señal base."
+      "Se requieren al menos tres noticias relevantes con sentimiento válido para este metal."
     ],
     "baseline_reasons": [
       "XGBoost no superó ambos modelos de referencia en macro-F1 del holdout.",
@@ -146,16 +146,13 @@
       "max_snapshot_age_hours": 24,
       "formula": "h=(1-a)*p+a*q; a=peso*(relevantes/5)*abs(sentimiento)",
       "neutral_probability": "Se conserva la probabilidad Neutral del modelo base.",
-      "relevant_articles": 3,
-      "mean_sentiment": 0.3333333333333333,
-      "relevant_coverage": 0.6,
-      "transferred_probability": 0.007583524882793426,
-      "score_semantics": "Interpretación contextual de un LLM (Mistral o Gemini) o, sin LLM, tono financiero de FinBERT; no efecto causal del precio."
+      "relevant_articles": 1,
+      "mean_sentiment": 0.5
     },
     "limitations": [
       "Escenario experimental con probabilidades orientativas: no fue entrenado ni validado temporalmente.",
       "El tono financiero no demuestra impacto causal ni dirección futura del precio; la asociación es una hipótesis.",
-      "FinBERT clasifica tono positivo, negativo o neutral del texto, no retorno de oro o plata.",
+      "El LLM (o FinBERT, si se usa) interpreta el texto de cada noticia; no observa el retorno de oro o plata.",
       "Las métricas de accuracy, precisión y F1 corresponden sólo a XGBoost, nunca a esta mezcla.",
       "Noticias recientes actualizan este escenario a su fecha de emisión; no modifican predicciones ni evaluaciones históricas.",
       "La mezcla no eleva la confianza de decisión ni cambia la señal o el riesgo base, incluso si cambia la tendencia mostrada."

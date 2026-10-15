@@ -75,6 +75,8 @@ flowchart TD
 9. [Cinco noticias por metal y sentimiento](docs/11_NOTICIAS_Y_SENTIMIENTO.md).
 10. [Mejora del modelo y métricas](docs/12_MODELO_Y_METRICAS.md).
 11. [Fuentes específicas de noticias](docs/13_FUENTES_NOTICIAS.md).
+12. [Proveedores de sentimiento (Mistral, Gemini, FinBERT)](docs/14_PROVEEDORES_SENTIMIENTO.md).
+13. [Publicación gratuita en Render](docs/16_DESPLIEGUE_RENDER.md).
 
 ## Alcance honesto
 

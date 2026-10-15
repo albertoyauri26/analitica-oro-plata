@@ -1,7 +1,7 @@
 """Una fila por mes y metal. No se rellenan precios ausentes ni objetivos futuros."""
 import numpy as np
 import pandas as pd
-from .config import DATA, THRESHOLDS, SERIES
+from .config import DATA, THRESHOLDS, SERIES, SENTIMENT_FEATURES, EXTRA_FEATURES, TONE_BAND
 from .storage import read
 from .news_filter import filter_news
 
@@ -52,9 +52,8 @@ def monthly_macro(raw, index):
 def add_context(frame, news, sentiment, production, metal):
     news = filter_news(news, metal)
     out = frame.copy()
-    out["news_sentiment"] = np.nan
-    out["news_count"] = np.nan
-    out["production_tonnes"] = np.nan
+    for col in EXTRA_FEATURES:
+        out[col] = np.nan
     if not news.empty and not sentiment.empty:
         s = sentiment[(sentiment.metal == metal) & (sentiment.relevant == 1)].copy()
         # Elegir primera respuesta por artículo, no mezclar versiones del mismo análisis.
@@ -67,8 +66,9 @@ def add_context(frame, news, sentiment, production, metal):
                 cutoff = date.tz_localize("UTC") + pd.Timedelta(days=1) - pd.Timedelta(microseconds=1)
                 window = joined[(joined.usable_at <= cutoff) & (pd.to_datetime(joined.published_at, utc=True, format="ISO8601") > cutoff - pd.Timedelta(days=31))]
                 if len(window):
-                    out.loc[date, "news_sentiment"] = window.score.mean()
-                    out.loc[date, "news_count"] = len(window)
+                    positive, negative = int((window.score > TONE_BAND).sum()), int((window.score < -TONE_BAND).sum())
+                    out.loc[date, SENTIMENT_FEATURES] = [window.score.mean(), len(window), positive, negative,
+                                                         len(window) - positive - negative]
     if not production.empty:
         part = production[production.metal == metal].copy()
         part["usable_at"] = pd.to_datetime(part.available_at, utc=True, format="ISO8601")
@@ -103,7 +103,7 @@ def build_dataset(conn, save=True):
         f["metal"] = metal
         # Al terminar mes t, último precio utilizado es t-1. La etiqueta mide t -> t+1.
         # Así no suponemos que el promedio de t ya estaba publicado al cierre de t.
-        predictors = [c for c in f.columns if c not in {"metal", "news_sentiment", "news_count", "production_tonnes"}]
+        predictors = [c for c in f.columns if c not in {"metal", *EXTRA_FEATURES}]
         f[predictors] = f[predictors].shift(1)
         f["source_price_month"] = pd.Series(index, index=index).shift(1)
         f["target_return"] = price.shift(-1) / price - 1

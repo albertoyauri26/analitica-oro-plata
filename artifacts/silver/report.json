@@ -1,6 +1,6 @@
 {
   "metal": "silver",
-  "created_at": "2026-10-12T21:21:28.220817+00:00",
+  "created_at": "2026-10-15T05:45:15.937029+00:00",
   "unit": "USD/onza troy, promedio mensual",
   "threshold": 0.03,
   "labels": {
@@ -31,6 +31,9 @@
   "excluded_context": {
     "news_sentiment": "Cobertura inicial 0.0%; se exige 80% y 60 meses observados.",
     "news_count": "Cobertura inicial 0.0%; se exige 80% y 60 meses observados.",
+    "news_positive": "Cobertura inicial 0.0%; se exige 80% y 60 meses observados.",
+    "news_negative": "Cobertura inicial 0.0%; se exige 80% y 60 meses observados.",
+    "news_neutral": "Cobertura inicial 0.0%; se exige 80% y 60 meses observados.",
     "production_tonnes": "Cobertura inicial 0.0%; se exige 80% y 60 meses observados."
   },
   "best_params": {
@@ -1262,6 +1265,40 @@
     "fed_change_3m": 0.0544220395386219,
     "yield_change_3m": 0.050920624285936356
   },
+  "sentiment_comparison": {
+    "features": [
+      "news_sentiment",
+      "news_count",
+      "news_positive",
+      "news_negative",
+      "news_neutral"
+    ],
+    "features_with_data": [],
+    "without": {
+      "accuracy": 0.5,
+      "balanced_accuracy": 0.46507936507936504,
+      "macro_precision": 0.6827586206896553,
+      "macro_recall": 0.46507936507936504,
+      "macro_f1": 0.4301218161683278,
+      "log_loss": 1.0778275728225708,
+      "multiclass_brier": 0.6539047877857267,
+      "importance": {}
+    },
+    "with": {
+      "accuracy": 0.5,
+      "balanced_accuracy": 0.46507936507936504,
+      "macro_precision": 0.6827586206896553,
+      "macro_recall": 0.46507936507936504,
+      "macro_f1": 0.4301218161683278,
+      "log_loss": 1.0778275728225708,
+      "multiclass_brier": 0.6539047877857267,
+      "importance": {}
+    },
+    "development_months_with_sentiment": 0,
+    "holdout_months_with_sentiment": 0,
+    "adopted_in_final_model": false,
+    "adoption_rule": "Se incorpora al modelo final cuando el primer bloque de entrenamiento tiene 60 meses y 80% de cobertura."
+  },
   "validation_limitations": [
     "Fuentes numéricas revisadas; rezagos conservadores, sin archivo de vintages.",
     "Probabilidades sin calibración externa; no equivalen a certeza.",
@@ -1282,7 +1319,7 @@
     "origin": "2026-09-30",
     "label_available_max": "2026-09-30"
   },
-  "dataset_sha256": "01f438d2452aafbd8909bd193831fea1beea11b3f35a0af62b0c43ef4b7d9157",
+  "dataset_sha256": "59910d77b9f00e1749cb43087a9b3b329ce3c52f71862c748b58ab172e38d0ac",
   "class_counts": {
     "Alcista": 113,
     "Neutral": 107,

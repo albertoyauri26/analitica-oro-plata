@@ -86,3 +86,26 @@ def test_weighted_model_exports_without_inference_transform(tmp_path):
     loaded = XGBClassifier()
     loaded.load_model(path)
     np.testing.assert_allclose(model.predict_proba(frame[["feature"]]), loaded.predict_proba(frame[["feature"]]))
+
+
+def test_sentiment_comparison_changes_only_sentiment_columns():
+    rng = np.random.default_rng(0)
+    frame = pd.DataFrame({"date": pd.date_range("2010-01-31", periods=120, freq="ME"),
+                          "ret_1m": rng.normal(size=120), "target": np.tile([0, 1, 2], 40)})
+    for col in modeling.SENTIMENT_FEATURES:
+        frame[col] = np.nan
+    frame.loc[100:, modeling.SENTIMENT_FEATURES] = 1.0  # sólo meses recientes tienen noticias
+    development, holdout = frame.iloc[:96], frame.iloc[96:]
+    best = {"params": {"max_depth": 1, "n_estimators": 10}, "weighting": "uniform"}
+    result = modeling.sentiment_comparison(development, holdout, ["ret_1m"], best)
+    # Sin meses de sentimiento en entrenamiento, ambas versiones son el mismo modelo.
+    assert result["features_with_data"] == []
+    assert result["with"] == result["without"]
+    assert result["development_months_with_sentiment"] == 0
+    assert result["holdout_months_with_sentiment"] == 20
+    assert result["adopted_in_final_model"] is False
+    frame.loc[60:, modeling.SENTIMENT_FEATURES] = 1.0  # con historial, la variante sí las usa
+    result = modeling.sentiment_comparison(frame.iloc[:96], holdout, ["ret_1m"], best)
+    assert result["features_with_data"] == modeling.SENTIMENT_FEATURES
+    assert set(result["with"]["importance"]) == set(modeling.SENTIMENT_FEATURES)
+    assert result["without"]["importance"] == {}

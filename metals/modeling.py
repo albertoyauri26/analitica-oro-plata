@@ -9,7 +9,7 @@ from sklearn.metrics import accuracy_score, balanced_accuracy_score, f1_score, p
 from sklearn.model_selection import TimeSeriesSplit
 from sklearn.utils.class_weight import compute_sample_weight
 from xgboost import XGBClassifier
-from .config import ARTIFACTS, CORE_FEATURES, EXTRA_FEATURES, LABELS, THRESHOLDS
+from .config import ARTIFACTS, CORE_FEATURES, EXTRA_FEATURES, LABELS, THRESHOLDS, SENTIMENT_FEATURES
 from .storage import now, save_json, dataset_sha256
 
 def estimator(params):
@@ -101,6 +101,26 @@ def select_model(development, features, candidates=None):
     best = max(trials, key=lambda r: (r["mean_macro_f1"], r["mean_accuracy"], -r["mean_log_loss"]))
     return best, trials
 
+def sentiment_comparison(development, holdout, features, best):
+    """Mismos hiperparámetros, desarrollo y holdout; sólo cambian las variables de sentimiento."""
+    base = [f for f in features if f not in SENTIMENT_FEATURES]
+    # Una columna sin datos no aporta información pero altera el muestreo de columnas
+    # (colsample_bytree): se omite para que la diferencia medida sea sólo del sentimiento.
+    observed = [f for f in SENTIMENT_FEATURES if development[f].notna().any()]
+    variants = {}
+    for name, columns in (("without", base), ("with", base + observed)):
+        model = estimator(best["params"])
+        model.fit(development[columns], development.target.astype(int),
+                  sample_weight=training_weights(development, best["weighting"]))
+        p = model.predict_proba(holdout[columns])
+        variants[name] = {**scores(holdout.target, p.argmax(axis=1), p),
+                          "importance": {f: float(i) for f, i in zip(columns, model.feature_importances_) if f in SENTIMENT_FEATURES}}
+    return {"features": SENTIMENT_FEATURES, "features_with_data": observed, "without": variants["without"], "with": variants["with"],
+            "development_months_with_sentiment": int(development.news_sentiment.notna().sum()),
+            "holdout_months_with_sentiment": int(holdout.news_sentiment.notna().sum()),
+            "adopted_in_final_model": any(f in features for f in SENTIMENT_FEATURES),
+            "adoption_rule": "Se incorpora al modelo final cuando el primer bloque de entrenamiento tiene 60 meses y 80% de cobertura."}
+
 def train_metal(dataset, metal, destination=ARTIFACTS):
     frame = dataset[dataset.metal == metal].sort_values("date").copy()
     # Se exige cobertura de las features base; la app nunca oculta una macro ausente.
@@ -152,6 +172,7 @@ def train_metal(dataset, metal, destination=ARTIFACTS):
               "confusion_matrix": confusion_matrix(holdout.target, predicted, labels=[0, 1, 2]).tolist(),
               "classification_report": classification_report(holdout.target, predicted, labels=[0, 1, 2], target_names=list(LABELS.values()), output_dict=True, zero_division=0),
               "importance": dict(zip(features, map(float, evaluation.feature_importances_))),
+              "sentiment_comparison": sentiment_comparison(development, holdout, features, best),
               "validation_limitations": ["Fuentes numéricas revisadas; rezagos conservadores, sin archivo de vintages.",
                                          "Probabilidades sin calibración externa; no equivalen a certeza.",
                                          "Ponderar clases o recencia cambia el ajuste; su utilidad depende de la validación temporal.",

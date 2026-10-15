@@ -56,7 +56,7 @@ def test_changed_trend_never_upgrades_base_signal_or_confidence():
     assert result["risk"] == "Alto"
     assert result["decision_uses_hybrid"] is False
     assert result["validated"] is False
-    assert any("FinBERT" in text and "no retorno" in text for text in result["limitations"])
+    assert any("LLM" in text and "no observa el retorno" in text for text in result["limitations"])
 
 
 def test_zero_weight_disables_without_news():

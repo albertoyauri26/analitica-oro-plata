@@ -21,7 +21,10 @@ CORE_FEATURES = ["ret_1m", "ret_3m", "ret_6m", "ret_12m", "sma_gap_3", "sma_gap_
                  "vol_6m", "vol_12m", "rsi_6m", "drawdown_12m", "gold_silver_ratio",
                  "ratio_change_3m", "fedfunds", "treasury10", "vix", "inflation_yoy",
                  "fed_change_3m", "yield_change_3m"]
-EXTRA_FEATURES = ["news_sentiment", "news_count", "production_tonnes"]
+# Sentimiento mensual de noticias relevantes (ventana de 31 días): promedio, total y conteo por tono.
+SENTIMENT_FEATURES = ["news_sentiment", "news_count", "news_positive", "news_negative", "news_neutral"]
+EXTRA_FEATURES = SENTIMENT_FEATURES + ["production_tonnes"]
+TONE_BAND = 0.1  # |score| <= 0.1 cuenta como neutral, igual que en el dashboard.
 
 def ensure_dirs():
     for path in (DATA, DATA / "raw", ARTIFACTS):

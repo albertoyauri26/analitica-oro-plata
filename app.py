@@ -267,6 +267,32 @@ with tabs[1]:
             st.json({"parámetros": report["best_params"], "ponderación": report.get("best_weighting", "uniform"), "selección": report.get("selection", {}), "log_loss": report["xgboost"]["log_loss"], "Brier multiclase": report["xgboost"]["multiclass_brier"], "variables de contexto excluidas": report["excluded_context"], "entrenamiento final": report["final_train"]})
             st.caption("El modelo final se reentrena después de la evaluación. Las métricas del holdout corresponden al modelo evaluado, exportado por separado.")
         st.caption("Este periodo de prueba ya fue examinado en versiones previas: la comparación es retrospectiva y necesita validación prospectiva con nuevos meses.")
+        st.subheader("Sentimiento dentro de XGBoost")
+        sc = report.get("sentiment_comparison")
+        if sc:
+            left, right = st.columns([1.2, 1])
+            with left:
+                versus = pd.DataFrame({"Sin sentimiento": sc["without"], "Con sentimiento": sc["with"]}).T
+                st.dataframe(versus[["accuracy", "macro_f1", "macro_precision"]].rename(columns={"accuracy": "Exactitud", "macro_f1": "Macro-F1", "macro_precision": "Precisión macro"}).style.format("{:.3f}"), width="stretch")
+                st.caption("Mismos hiperparámetros, mismo entrenamiento y mismo holdout; sólo cambian las variables de sentimiento.")
+            with right:
+                a, b = st.columns(2)
+                a.metric("Meses con sentimiento · entrenamiento", sc["development_months_with_sentiment"])
+                b.metric("Meses con sentimiento · prueba", sc["holdout_months_with_sentiment"])
+                st.write("**En el modelo final:** " + ("incluido." if sc["adopted_in_final_model"] else "todavía no; " + sc["adoption_rule"].lower()))
+            if sc["development_months_with_sentiment"] < 60:
+                st.info("Las noticias analizadas cubren muy pocos meses frente a la historia de precios desde 2000: el modelo con sentimiento todavía no puede aprender de ellas y ambas versiones rinden igual. Cada mes de noticias analizadas se acumula y el sentimiento se incorpora solo al cumplir la regla.")
+        monthly = dataset[(dataset.metal == metal) & dataset.news_count.notna()].tail(12) if dataset is not None else pd.DataFrame()
+        if len(monthly):
+            counts = monthly.melt(id_vars="date", value_vars=["news_positive", "news_neutral", "news_negative"], var_name="Tono", value_name="Noticias")
+            counts["Tono"] = counts.Tono.map({"news_positive": "Positivo", "news_neutral": "Mixto / neutral", "news_negative": "Negativo"})
+            fig = px.bar(counts, x="date", y="Noticias", color="Tono", color_discrete_map={"Positivo": GREEN, "Negativo": RED, "Mixto / neutral": SILVER}, title=f"Variables mensuales de sentimiento · {metal_label}", labels={"date": "Mes"})
+            fig.add_trace(go.Scatter(x=monthly.date, y=monthly.news_sentiment, name="Sentimiento medio", yaxis="y2", mode="lines+markers", line=dict(color=COLORS[metal], width=2.5)))
+            fig.update_layout(yaxis2=dict(overlaying="y", side="right", range=[-1, 1], title="Sentimiento medio"))
+            chart(fig, 320)
+            st.caption("Noticias relevantes publicadas y analizadas dentro de los 31 días previos a cada cierre mensual; nunca se usan análisis posteriores a ese cierre.")
+        else:
+            st.caption("Todavía no hay meses de cierre con noticias analizadas antes de esa fecha.")
         st.download_button("Descargar reporte de evaluación", report_path.read_bytes(), f"{metal}_report.json", "application/json")
 
 with tabs[2]:
