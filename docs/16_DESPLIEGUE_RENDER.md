@@ -36,7 +36,8 @@ git push origin master
 |---|---|
 | `MISTRAL_API_KEY` | clave de [console.mistral.ai](https://console.mistral.ai), sin fecha de vencimiento próxima |
 | `SENTIMENT_PROVIDER` | `mistral` |
-| `APP_PASSWORD` | contraseña para el botón "Probar el análisis en vivo" |
+
+El botón "Probar el análisis en vivo" no pide contraseña: se ejecuta una vez a la vez y como máximo una vez cada 10 minutos para todos los visitantes, lo que limita el uso de la cuota del LLM.
 
 5. **Deploy Web Service**. Al terminar, el registro muestra `Your service is live` y la URL `https://<nombre>.onrender.com`.
 
@@ -49,7 +50,7 @@ Cada `git push` a `master` despliega una versión nueva. Si no ocurre, en Render
 ## 4. Comprobar la publicación
 
 - Abrir la URL y la pestaña **Noticias y minería**.
-- Escribir `APP_PASSWORD` y pulsar **Actualizar noticias y analizar**. Ambos pasos deben terminar con `código 0`.
+- Pulsar **Actualizar noticias y analizar**. Ambos pasos deben terminar con `código 0`. Un segundo intento antes de 10 minutos muestra el tiempo de espera.
 - En `"providers"` sólo debe aparecer el modelo de Mistral configurado.
 
 ## Problemas frecuentes

@@ -1,9 +1,9 @@
 """Dashboard académico: mercado, modelo, decisión y sentimiento real de un LLM (Mistral o Gemini)."""
-import hmac
 import io
 import json
-import os
 import sqlite3
+import threading
+import time
 from contextlib import closing, redirect_stdout
 import pandas as pd
 import requests
@@ -23,6 +23,13 @@ from metals.cli import news_refresh, predict_metals
 
 st.set_page_config(page_title="Aurum | Oro y plata", page_icon="◈", layout="wide")
 style()
+LIVE_COOLDOWN_MINUTES = 10
+
+
+@st.cache_resource
+def live_guard():
+    """Compartido por todos los visitantes: una ejecución a la vez y una cada LIVE_COOLDOWN_MINUTES."""
+    return {"lock": threading.Lock(), "last": 0.0}
 conn = connect()
 try:
     prices, macro, news, sentiment, production, logs = [read(conn, t) for t in ("prices", "macro", "news", "sentiment", "production", "ingestion_log")]
@@ -423,17 +430,16 @@ with tabs[3]:
     st.subheader("Probar el análisis en vivo")
     if st.session_state.get("live_log"):
         st.code(st.session_state["live_log"])
-    live_password = os.environ.get("APP_PASSWORD", "")
-    if not live_password:
-        st.caption("Desactivado: el servidor no tiene APP_PASSWORD. Sin contraseña nadie puede gastar la cuota del LLM.")
-    else:
-        st.caption("Descarga las noticias más recientes, las analiza con el LLM configurado y recalcula la predicción (1-2 minutos). Al terminar la página se recarga: vuelve a esta pestaña para ver el resultado.")
-        typed = st.text_input("Contraseña de prueba", type="password", key="live_password")
-        if st.button("Actualizar noticias y analizar", key="live_run"):
-            if not hmac.compare_digest(typed.encode(), live_password.encode()):
-                st.error("Contraseña incorrecta.")
-            else:
-                # shortcut: dos clics simultáneos lanzan dos procesos sobre el mismo SQLite; añadir un bloqueo si hay muchos usuarios.
+    st.caption(f"Descarga las noticias más recientes, las analiza con el LLM configurado y recalcula la predicción (1-2 minutos). Para cuidar la cuota del LLM se puede ejecutar una vez cada {LIVE_COOLDOWN_MINUTES} minutos. Al terminar la página se recarga: vuelve a esta pestaña para ver el resultado.")
+    if st.button("Actualizar noticias y analizar", key="live_run"):
+        guard = live_guard()
+        wait = guard["last"] + LIVE_COOLDOWN_MINUTES * 60 - time.time()
+        if wait > 0:
+            st.warning(f"El análisis en vivo se ejecutó hace poco. Vuelve a intentarlo en {int(wait // 60) + 1} minuto(s); mientras tanto la página muestra el último resultado.")
+        elif not guard["lock"].acquire(blocking=False):
+            st.warning("Ya hay un análisis en curso iniciado por otra persona. Espera un momento y recarga la página.")
+        else:
+            try:
                 # En el mismo proceso: un segundo intérprete de Python superaba los 512 MB del plan gratuito de Render.
                 output = []
                 steps = (("news-refresh --per-metal 5 --analyze", lambda live: news_refresh(live, 5, True)),
@@ -448,8 +454,11 @@ with tabs[3]:
                                 print(f"ERROR: {exc}")
                                 code = 1
                         output.append(f"$ metals.cli {label}  →  código {code}\n{buffer.getvalue()[-2500:]}")
-                st.session_state["live_log"] = "\n\n".join(output)
-                st.rerun()
+                guard["last"] = time.time()
+            finally:
+                guard["lock"].release()
+            st.session_state["live_log"] = "\n\n".join(output)
+            st.rerun()
     st.subheader("Contexto de producción minera")
     if production.empty:
         st.info("Sin cifras anuales importadas. El conector USGS está preparado; deben añadirse observaciones verificadas con su fecha de publicación.")
