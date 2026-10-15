@@ -1,6 +1,6 @@
 {
   "metal": "silver",
-  "created_at": "2026-10-15T05:45:15.937029+00:00",
+  "created_at": "2026-10-15T17:02:18.575444+00:00",
   "unit": "USD/onza troy, promedio mensual",
   "threshold": 0.03,
   "labels": {
@@ -34,6 +34,7 @@
     "news_positive": "Cobertura inicial 0.0%; se exige 80% y 60 meses observados.",
     "news_negative": "Cobertura inicial 0.0%; se exige 80% y 60 meses observados.",
     "news_neutral": "Cobertura inicial 0.0%; se exige 80% y 60 meses observados.",
+    "news_confidence": "Cobertura inicial 0.0%; se exige 80% y 60 meses observados.",
     "production_tonnes": "Cobertura inicial 0.0%; se exige 80% y 60 meses observados."
   },
   "best_params": {
@@ -1271,7 +1272,8 @@
       "news_count",
       "news_positive",
       "news_negative",
-      "news_neutral"
+      "news_neutral",
+      "news_confidence"
     ],
     "features_with_data": [],
     "without": {
@@ -1319,7 +1321,7 @@
     "origin": "2026-09-30",
     "label_available_max": "2026-09-30"
   },
-  "dataset_sha256": "59910d77b9f00e1749cb43087a9b3b329ce3c52f71862c748b58ab172e38d0ac",
+  "dataset_sha256": "4e2bdf01b5c35946a536543b7e9409277a7ed6b8c9bfd095c1b5ee6a5d27c5db",
   "class_counts": {
     "Alcista": 113,
     "Neutral": 107,

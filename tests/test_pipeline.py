@@ -163,3 +163,19 @@ def test_dataset_fingerprint_is_the_same_on_windows_and_linux(monkeypatch):
         monkeypatch.setattr("os.linesep", separator)
         digests.add(dataset_sha256(frame))
     assert len(digests) == 1
+
+
+def test_old_database_gains_confidence_column_without_losing_rows(tmp_path):
+    from metals.storage import connect
+    path = tmp_path / "old.sqlite"
+    old = sqlite3.connect(path)
+    old.execute("CREATE TABLE sentiment (news_id TEXT NOT NULL, metal TEXT NOT NULL, score REAL, relevant INTEGER NOT NULL, "
+                "explanation TEXT, evidence TEXT, model TEXT NOT NULL, prompt_version TEXT NOT NULL, analyzed_at TEXT NOT NULL, "
+                "PRIMARY KEY(news_id,metal,model,prompt_version))")
+    old.execute("INSERT INTO sentiment VALUES ('n1','gold',0.5,1,'x','y','m','v','2026-01-01')")
+    old.commit()
+    old.close()
+    conn = connect(path)
+    rows = read(conn, "sentiment")
+    assert "confidence" in rows and len(rows) == 1 and rows.confidence.isna().all()
+    conn.close()

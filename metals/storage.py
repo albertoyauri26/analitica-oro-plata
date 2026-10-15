@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS news (
 CREATE TABLE IF NOT EXISTS sentiment (
  news_id TEXT NOT NULL, metal TEXT NOT NULL, score REAL, relevant INTEGER NOT NULL,
  explanation TEXT, evidence TEXT, model TEXT NOT NULL, prompt_version TEXT NOT NULL,
- analyzed_at TEXT NOT NULL, PRIMARY KEY(news_id,metal,model,prompt_version));
+ analyzed_at TEXT NOT NULL, confidence REAL, PRIMARY KEY(news_id,metal,model,prompt_version));
 CREATE TABLE IF NOT EXISTS production (
  metal TEXT NOT NULL, year INTEGER NOT NULL, tonnes REAL NOT NULL CHECK(tonnes>0),
  available_at TEXT NOT NULL, source TEXT NOT NULL, fetched_at TEXT NOT NULL,
@@ -36,6 +36,10 @@ def connect(path=None):
     ensure_dirs()
     conn = sqlite3.connect(path or DB, timeout=30)
     conn.executescript(SCHEMA)
+    # Bases anteriores no tienen la confianza del LLM: se agrega vacía, sin tocar análisis existentes.
+    if "confidence" not in {row[1] for row in conn.execute("PRAGMA table_info(sentiment)")}:
+        with conn:
+            conn.execute("ALTER TABLE sentiment ADD COLUMN confidence REAL")
     return conn
 
 def upsert(conn, table, rows):

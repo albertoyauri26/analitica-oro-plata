@@ -166,6 +166,26 @@ with tabs[0]:
 
 with tabs[1]:
     st.subheader("Dashboard — Predictivo")
+    side_by_side = []
+    for key, label in (("gold", "Oro"), ("silver", "Plata")):
+        key_report_path = ARTIFACTS / key / "report.json"
+        if dataset is None or not key_report_path.exists():
+            continue
+        key_report = json.loads(key_report_path.read_text(encoding="utf-8"))
+        key_context = news_context if key == metal else news_snapshot(news, sentiment, key)
+        try:
+            key_prediction = prediction if key == metal and prediction else predict(dataset, key, save=False, news_context=key_context, hybrid_weight=hybrid_weight / 100 if hybrid_enabled else 0)
+        except (ValueError, FileNotFoundError):
+            continue
+        side_by_side.append({"Metal": label, "Tendencia": key_prediction["trend"], "Probabilidad": key_prediction["max_probability"],
+                             "Señal": key_prediction["signal"], "Riesgo": key_prediction["risk"],
+                             "Exactitud": key_report["xgboost"]["accuracy"], "Macro-F1": key_report["xgboost"]["macro_f1"],
+                             "Sentimiento reciente": key_context["mean_sentiment"]})
+    if side_by_side:
+        with st.container(border=True):
+            st.markdown("#### Oro vs plata")
+            st.dataframe(pd.DataFrame(side_by_side).set_index("Metal").style.format({"Probabilidad": "{:.1%}", "Exactitud": "{:.1%}", "Macro-F1": "{:.3f}", "Sentimiento reciente": "{:+.2f}"}, na_rep="Sin dato"), width="stretch")
+            st.caption("Misma fecha de origen y mismas reglas para ambos metales. Exactitud y Macro-F1 corresponden al holdout de cada XGBoost.")
     if prediction:
         trend_tone = {"Alcista": "positive", "Bajista": "negative", "Neutral": ""}[prediction["trend"]]
         a, b, c, d = st.columns([1.5, 1, 1, 1])
@@ -382,7 +402,8 @@ with tabs[3]:
                 if pd.notna(item.get("analyzed_at")):
                     score_text = f"{item['score']:+.2f}" if item["relevant"] else "No aplica"
                     relevant_text = "Sí" if item["relevant"] else "No"
-                    st.write(f"**Relevancia:** {relevant_text} · **Score:** {score_text}")
+                    confidence_text = f" · **Confianza:** {item['confidence']:.0%}" if pd.notna(item.get("confidence")) else ""
+                    st.write(f"**Relevancia:** {relevant_text} · **Score:** {score_text}{confidence_text}")
                     st.write(item["explanation"])
                     if item.get("evidence"):
                         st.write("Evidencia literal:")
@@ -390,7 +411,7 @@ with tabs[3]:
                     st.caption(f"Modelo: {item['model']} · Análisis: {item['analyzed_at']}")
                 else:
                     st.caption("Pendiente de análisis. No se ha asignado sentimiento.")
-        export_cols = ["title", "url", "source", "published_at", "relevant", "score", "explanation", "evidence", "model", "analyzed_at"]
+        export_cols = [c for c in ["title", "url", "source", "published_at", "relevant", "score", "confidence", "explanation", "evidence", "model", "analyzed_at"] if c in article_view]
         st.download_button("Descargar noticias y sentimiento", article_view[export_cols].to_csv(index=False).encode("utf-8-sig"), f"{metal}_sentiment.csv", "text/csv")
     else:
         st.info(f"No hay noticias específicas de {metal_label.lower()} guardadas. Ejecuta la ingesta o importa artículos verificados.")

@@ -16,9 +16,10 @@ import pandas as pd
 
 # v2: la escala indica la dirección sugerida para el precio (déficit de oferta = +1), no un tono genérico.
 # v3: noticias de una sola empresa no mueven el precio del metal; valores intermedios para textos mixtos.
-PROMPT_VERSION = "metals-v3"
+# v4: el LLM informa su confianza (0 a 1) en cada puntuación.
+PROMPT_VERSION = "metals-v4"
 # Mismo prompt más una regla de sistema sobre el formato de la evidencia literal.
-MISTRAL_PROMPT_VERSION = "metals-v3-mistral"
+MISTRAL_PROMPT_VERSION = "metals-v4-mistral"
 MISTRAL_SYSTEM = ("Responde sólo con el JSON pedido. En evidence copia exactamente una frase continua del TEXTO, "
                   "carácter por carácter: sin comillas añadidas, sin markdown, sin puntos suspensivos, sin unir "
                   "fragmentos y sin traducir ni resumir.")
@@ -175,6 +176,8 @@ class MetalSentiment(BaseModel):
     score: float = Field(ge=-1, le=1, allow_inf_nan=False)
     explanation: str = Field(max_length=700)
     evidence: str = Field(max_length=300)
+    # Opcional para conservar análisis y proveedores anteriores que no la informan.
+    confidence: float | None = Field(default=None, ge=0, le=1, allow_inf_nan=False)
 
 class SentimentResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -280,6 +283,7 @@ def analyze(conn, limit=5, source=None, per_metal=None, provider=None):
             "Usa valores intermedios (por ejemplo 0.5 o -0.5) si el texto es mixto o matizado. Resultados, "
             "trimestres, perforaciones, adquisiciones o reaperturas de UNA empresa no indican por sí solos el "
             "precio del metal: puntúa 0 salvo que el texto hable del mercado; una mina nueva o reabierta añade oferta. "
+            "confidence es tu seguridad en la puntuación, de 0 (dudosa) a 1 (clara). "
             "No es una predicción financiera ni una recomendación. relevant indica relación sustantiva. "
             "Devuelve exactamente un resultado por metal. explanation en español. evidence debe ser una "
             "cita literal breve del texto si relevant=true. Si no relevante, evidence vacío y score=0. "
@@ -326,7 +330,8 @@ def analyze(conn, limit=5, source=None, per_metal=None, provider=None):
         topical_metals = pending[r["id"]]
         rows = [dict(news_id=r["id"], metal=result.metal, score=result.score if result.relevant else None,
                      relevant=int(result.relevant), explanation=result.explanation, evidence=result.evidence,
-                     model=used_model, prompt_version=used_version, analyzed_at=now()) for result in parsed.results if result.metal in topical_metals]
+                     confidence=result.confidence, model=used_model, prompt_version=used_version,
+                     analyzed_at=now()) for result in parsed.results if result.metal in topical_metals]
         upsert(conn, "sentiment", rows)
         count += 1
         label = spec["label"] if active == llm else "FinBERT local"

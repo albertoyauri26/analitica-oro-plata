@@ -121,7 +121,7 @@ class FinBertEngine:
                     f"P(negativo)={probabilities['negative']:.1%}. "
                     "Índice=P(positivo)-P(negativo). Relevancia temática por mención del metal; "
                     "no determina el efecto causal sobre su precio."),
-                "evidence": fragments[strongest][:300]})
+                "evidence": fragments[strongest][:300], "confidence": probabilities[label]})
         return {"results": results, "model": LOCAL_MODEL, "prompt_version": LOCAL_PROMPT_VERSION,
                 "semantics": "financial_text_tone"}
 

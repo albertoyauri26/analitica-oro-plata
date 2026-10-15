@@ -67,8 +67,9 @@ def add_context(frame, news, sentiment, production, metal):
                 window = joined[(joined.usable_at <= cutoff) & (pd.to_datetime(joined.published_at, utc=True, format="ISO8601") > cutoff - pd.Timedelta(days=31))]
                 if len(window):
                     positive, negative = int((window.score > TONE_BAND).sum()), int((window.score < -TONE_BAND).sum())
+                    confidence = window["confidence"].mean() if "confidence" in window else np.nan
                     out.loc[date, SENTIMENT_FEATURES] = [window.score.mean(), len(window), positive, negative,
-                                                         len(window) - positive - negative]
+                                                         len(window) - positive - negative, confidence]
     if not production.empty:
         part = production[production.metal == metal].copy()
         part["usable_at"] = pd.to_datetime(part.available_at, utc=True, format="ISO8601")
