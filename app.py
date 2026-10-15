@@ -123,7 +123,7 @@ with tabs[0]:
     left, middle, right = st.columns([1.7, 1.1, 1])
     with left:
         fig = go.Figure()
-        fig.add_trace(go.Scatter(x=visible.date, y=visible.price, name=metal_label, line=dict(color=COLORS[metal], width=2.5), fill="tozeroy", fillcolor="rgba(224,187,109,0.055)"))
+        fig.add_trace(go.Scatter(x=visible.date, y=visible.price, name=metal_label, line=dict(color=COLORS[metal], width=2.5), fill="tozeroy", fillcolor="rgba(227,179,65,0.08)"))
         sma = history.rolling(12).mean().loc[visible.date.min():]
         fig.add_trace(go.Scatter(x=sma.index, y=sma, name="Media de 12 meses", line=dict(color="#7387A4", dash="dot", width=1.5)))
         fig.update_layout(title=f"{metal_label} · precio y media móvil", yaxis_title="USD / oz troy")
@@ -239,7 +239,7 @@ with tabs[1]:
         fig = go.Figure(go.Scatter(x=normalized_recent.index, y=normalized_recent, name=f"{metal_label} observado", line=dict(color=COLORS[metal], width=2.5)))
         target_date = pd.Timestamp(prediction["target_month"])
         fig.add_vrect(x0=target_date.replace(day=1), x1=target_date, fillcolor=COLORS[prediction["trend"]], opacity=0.1, line_width=0)
-        fig.add_annotation(x=target_date, y=1, yref="paper", text=f"{prediction['trend']} · {prediction['max_probability']:.1%}", showarrow=False, xanchor="right", bgcolor="#ffffff")
+        fig.add_annotation(x=target_date, y=1, yref="paper", text=f"{prediction['trend']} · {prediction['max_probability']:.1%}", showarrow=False, xanchor="right", bgcolor="#111a2b", bordercolor="#2a3953")
         fig.update_layout(title="Histórico reciente y mes objetivo", yaxis_title="Índice · base inicial 100")
         chart(fig, 300)
         st.caption("La zona sombreada identifica el mes clasificado. El modelo estima una clase, no una trayectoria ni un precio futuro.")
@@ -271,7 +271,7 @@ with tabs[1]:
                 st.info("XGBoost supera ambas referencias en esta prueba; aún se necesita evaluar su estabilidad en otros periodos.")
         with right:
             cm = pd.DataFrame(report["confusion_matrix"], index=LABELS.values(), columns=LABELS.values())
-            fig = px.imshow(cm, text_auto=True, color_continuous_scale=["#142238", "#47617C", "#E0BB6D"], labels={"x": "Predicción", "y": "Clase real"}, title="Matriz de confusión")
+            fig = px.imshow(cm, text_auto=True, color_continuous_scale=["#0f1829", "#2c4566", "#E3B341"], labels={"x": "Predicción", "y": "Clase real"}, title="Matriz de confusión")
             chart(fig, 310)
         left, right = st.columns(2)
         with left:
