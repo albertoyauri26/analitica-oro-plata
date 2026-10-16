@@ -138,7 +138,7 @@ def summary_card(label, value, note="", tone=""):
 
 
 def publisher_name(source):
-    return str(source).replace(" — Gold RSS", "").replace(" — Silver RSS", "")
+    return str(source).replace(" — Gold RSS", "").replace(" — Silver RSS", "").replace(" — Gold price", "").replace(" — Silver price", "")
 
 
 def topic_label(title, summary):

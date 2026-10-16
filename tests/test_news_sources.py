@@ -42,3 +42,14 @@ def test_full_gold_batch_does_not_prevent_shared_article_for_silver():
     selected, coverage = select_balanced(rows, per_metal=1)
     assert len(selected) == 2
     assert coverage == {"gold": 1, "silver": 1}
+
+
+def test_cli_news_refresh_command_reaches_the_function(monkeypatch):
+    import sqlite3, sys
+    from metals import cli
+    called = []
+    monkeypatch.setattr(cli, "news_refresh", lambda conn, per_metal, analyze: called.append((per_metal, analyze)))
+    monkeypatch.setattr(cli, "connect", lambda: sqlite3.connect(":memory:"))
+    monkeypatch.setattr(sys, "argv", ["metals.cli", "news-refresh", "--per-metal", "3", "--analyze"])
+    assert cli.main() == 0
+    assert called == [(3, True)]

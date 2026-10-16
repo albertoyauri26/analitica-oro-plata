@@ -10,7 +10,18 @@ El recolector consulta RSS públicos especializados, comprueba el tema de cada t
 | The Northern Miner | [Categoría plata](https://www.northernminer.com/commodity/silver/) · [RSS plata](https://www.northernminer.com/commodity/silver/feed/) | HTTP 200; 20 entradas |
 | Mining Australia | [Categoría plata](https://miningaustralia.com.au/category/commodities/silver-mining-news/) · [RSS plata](https://miningaustralia.com.au/category/commodities/silver-mining-news/feed/) | HTTP 200; 10 entradas |
 
-Las tres URLs RSS se localizaron en los enlaces `rel="alternate"` de sus respectivas páginas. La cantidad y el contenido del feed pueden cambiar. Se obtiene lo que cada medio publica en su RSS, sin descargar el cuerpo del artículo ni contenido de suscripción. La categoría de una página por sí sola no demuestra relevancia: también se exige una mención temática en los metadatos del artículo.
+### Fuentes de mercado añadidas el 15 de octubre de 2026
+
+Los RSS mineros publican sobre todo noticias de empresas (exploración, minas, resultados), que el LLM marca como no relevantes para el precio del metal: en oro quedaba una sola noticia relevante. Se añadieron dos búsquedas públicas de Google News que agregan noticias del precio de medios financieros (Kitco, Bloomberg, Fortune, TheStreet, Barchart):
+
+| Fuente | RSS | Prueba del 15/10/2026 |
+|---|---|---|
+| Google News — Gold price | [búsqueda "gold price", últimos 30 días](https://news.google.com/rss/search?q=%22gold+price%22+when:30d&hl=en-US&gl=US&ceid=US:en) | 97 noticias útiles |
+| Google News — Silver price | [búsqueda "silver price", últimos 30 días](https://news.google.com/rss/search?q=%22silver+price%22+when:30d&hl=en-US&gl=US&ceid=US:en) | 98 noticias útiles |
+
+El enlace de cada noticia pasa por Google News y el medio original figura al final del título. Se guardan sólo metadatos (título, extracto, enlace y fecha), igual que con las demás fuentes.
+
+Las tres URLs RSS mineras se localizaron en los enlaces `rel="alternate"` de sus respectivas páginas. La cantidad y el contenido del feed pueden cambiar. Se obtiene lo que cada medio publica en su RSS, sin descargar el cuerpo del artículo ni contenido de suscripción. La categoría de una página por sí sola no demuestra relevancia: también se exige una mención temática en los metadatos del artículo.
 
 La prueba de conexión a las 16:52 UTC del 24/09/2026 devolvió diez URLs únicas y cobertura de cinco noticias para oro y cinco para plata, sin déficit. Esta es una observación de la prueba, no una garantía de cobertura futura ni una validación de todas las afirmaciones periodísticas. El CSV `templates/news_verified_2026-09-24_batch.csv` conserva esa selección verificable para importación manual; no se usa para rellenar artificialmente una actualización fallida.
 

@@ -22,6 +22,10 @@ TARGETED_FEEDS = {
     "The Northern Miner — Gold RSS": "https://www.northernminer.com/commodity/gold/feed/",
     "The Northern Miner — Silver RSS": "https://www.northernminer.com/commodity/silver/feed/",
     "Mining Australia — Silver RSS": "https://miningaustralia.com.au/category/commodities/silver-mining-news/feed/",
+    # Los RSS mineros publican sobre todo noticias de empresas; estas búsquedas aportan noticias del precio
+    # (Kitco, Bloomberg, Fortune, Barchart...). El medio original aparece al final del título.
+    "Google News — Gold price": "https://news.google.com/rss/search?q=%22gold+price%22+when:30d&hl=en-US&gl=US&ceid=US:en",
+    "Google News — Silver price": "https://news.google.com/rss/search?q=%22silver+price%22+when:30d&hl=en-US&gl=US&ceid=US:en",
 }
 
 
