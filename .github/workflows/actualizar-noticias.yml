@@ -1,0 +1,41 @@
+# Actualización automática diaria: noticias + sentimiento con Mistral + predicción.
+# Guarda la base en el repositorio; Render despliega el commit y conserva los datos aunque se reinicie.
+# Requiere el secreto MISTRAL_API_KEY en Settings → Secrets and variables → Actions.
+name: Actualizar noticias y predicción
+
+on:
+  schedule:
+    - cron: "0 12 * * *"  # todos los días a las 12:00 UTC (7:00 en Lima)
+  workflow_dispatch:       # también se puede ejecutar a mano desde la pestaña Actions
+
+permissions:
+  contents: write
+
+concurrency: actualizar-noticias
+
+jobs:
+  actualizar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: requirements-lock.txt
+      - run: pip install -r requirements-lock.txt
+      - name: Noticias, sentimiento y predicción
+        env:
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          SENTIMENT_PROVIDER: mistral
+        run: |
+          # Si Mistral falla, las noticias quedan pendientes y la predicción se recalcula igual.
+          python -m metals.cli news-refresh --per-metal 5 --analyze || echo "::warning::El análisis de noticias no terminó; quedan pendientes."
+          python -m metals.cli predict > /dev/null
+      - name: Guardar resultados en el repositorio
+        run: |
+          git config user.name "albertoyauri26"
+          git config user.email "119146074+albertoyauri26@users.noreply.github.com"
+          git add data/metals.sqlite artifacts/gold/prediction.json artifacts/silver/prediction.json
+          git diff --cached --quiet || (git commit -m "Actualización automática de noticias y predicción" && git push)

@@ -72,3 +72,16 @@ Desde una terminal PowerShell abierta en la carpeta del proyecto:
 El primer comando reconstruye el dataset desde SQLite, ejecuta la selección y escribe los modelos e informes en `artifacts/gold` y `artifacts/silver`. El segundo comprueba que el dataset coincide con el entrenamiento y genera la predicción. Si se cambian datos, las cifras pueden cambiar; los valores de la tabla corresponden al snapshot indicado, no son objetivos que el código deba alcanzar.
 
 Referencias técnicas: [pesos por muestra en XGBoost](https://xgboost.readthedocs.io/en/stable/python/python_api.html#xgboost.XGBClassifier.fit), [ponderación balanceada en scikit-learn](https://scikit-learn.org/stable/modules/generated/sklearn.utils.class_weight.compute_sample_weight.html), [validación temporal](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.TimeSeriesSplit.html).
+
+## Backtesting con comisiones en el holdout
+
+`metals/backtest.py` simula sobre los 36 meses del holdout (2023-07 a 2026-07) una estrategia que invierte el mes siguiente sólo si el modelo predice Alcista y se queda fuera en otro caso, frente a comprar y mantener. Cobra 0,1 % por cada entrada o salida. Usa los retornos entre promedios mensuales de la etiqueta, no precios ejecutables, y no incluye impuestos ni deslizamiento. La pestaña Predictivo muestra el resultado.
+
+| Metal | Estrategia | Retorno acumulado | Caída máxima | Operaciones |
+|---|---|---:|---:|---:|
+| Oro | Modelo (13 meses invertido) | +45,8 % | −1,9 % | 11 |
+| Oro | Comprar y mantener | +104,8 % | −18,9 % | 1 |
+| Plata | Modelo (29 meses invertido) | +81,4 % | −24,7 % | 9 |
+| Plata | Comprar y mantener | +81,9 % | −36,2 % | 1 |
+
+En oro la estrategia gana menos que comprar y mantener en un periodo muy alcista, con una caída máxima mucho menor. En plata obtiene un retorno similar con menor caída. Es un resultado retrospectivo sobre un holdout ya examinado: no demuestra rentabilidad futura.

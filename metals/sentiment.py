@@ -141,20 +141,26 @@ def check_connection(provider="gemini"):
     return {"connection": "ok", "provider": provider, "configured_model": configured_model,
             "configured_model_available": configured_model in models, "available_models": models}
 
-def llm_request(provider, key, model, prompt):
-    """URL, cabeceras y cuerpo con salida JSON restringida al esquema SentimentResponse."""
-    schema = SentimentResponse.model_json_schema()
+def llm_request(provider, key, model, prompt, schema=None, system=None, max_tokens=None):
+    """URL, cabeceras y cuerpo con salida JSON restringida a un esquema (por defecto, SentimentResponse)."""
+    schema = schema or SentimentResponse.model_json_schema()
     if provider == "gemini":
+        body = {"contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {"temperature": 0, "responseMimeType": "application/json", "responseJsonSchema": schema}}
+        if system:
+            body["systemInstruction"] = {"parts": [{"text": system}]}
+        if max_tokens:
+            body["generationConfig"]["maxOutputTokens"] = max_tokens
         return (f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
-                {"x-goog-api-key": key, "Content-Type": "application/json"},
-                {"contents": [{"parts": [{"text": prompt}]}],
-                 "generationConfig": {"temperature": 0, "responseMimeType": "application/json", "responseJsonSchema": schema}})
+                {"x-goog-api-key": key, "Content-Type": "application/json"}, body)
+    body = {"model": model, "temperature": 0,
+            "messages": [{"role": "system", "content": system or MISTRAL_SYSTEM}, {"role": "user", "content": prompt}],
+            "response_format": {"type": "json_schema",
+                                "json_schema": {"name": "respuesta", "schema": schema, "strict": True}}}
+    if max_tokens:
+        body["max_tokens"] = max_tokens
     return ("https://api.mistral.ai/v1/chat/completions",
-            {"Authorization": f"Bearer {key}", "Content-Type": "application/json", "Accept": "application/json"},
-            {"model": model, "temperature": 0,
-             "messages": [{"role": "system", "content": MISTRAL_SYSTEM}, {"role": "user", "content": prompt}],
-             "response_format": {"type": "json_schema",
-                                 "json_schema": {"name": "metal_sentiment", "schema": schema, "strict": True}}})
+            {"Authorization": f"Bearer {key}", "Content-Type": "application/json", "Accept": "application/json"}, body)
 
 def llm_text(provider, body):
     if provider == "gemini":

@@ -109,3 +109,16 @@ def test_sentiment_comparison_changes_only_sentiment_columns():
     assert result["features_with_data"] == modeling.SENTIMENT_FEATURES
     assert set(result["with"]["importance"]) == set(modeling.SENTIMENT_FEATURES)
     assert result["without"]["importance"] == {}
+
+
+def test_backtest_charges_commission_on_each_entry_and_exit():
+    from metals.backtest import backtest
+    frame = pd.DataFrame({"date": pd.date_range("2024-01-31", periods=3, freq="ME"),
+                          "target_return": [0.10, -0.10, 0.05], "prediction": [2, 0, 2]})
+    result = backtest(frame, commission=0.01)
+    # Entra, sale y vuelve a entrar: tres operaciones; fuera del mercado no gana ni pierde.
+    assert result["modelo"]["operaciones"] == 3 and result["meses_invertido"] == 2
+    assert result["modelo"]["retorno_acumulado"] == pytest.approx(1.09 * 0.99 * 1.04 - 1)
+    assert result["comprar_y_mantener"]["retorno_acumulado"] == pytest.approx(1.09 * 0.90 * 1.05 - 1)
+    assert result["comprar_y_mantener"]["caida_maxima"] == pytest.approx(-0.10)
+    assert result["modelo"]["caida_maxima"] == pytest.approx(-0.01)

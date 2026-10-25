@@ -20,6 +20,8 @@ from metals.news_filter import filter_news
 from metals.news_context import snapshot as news_snapshot
 from metals.sentiment import active_results
 from metals.cli import news_refresh, predict_metals
+from metals.advisor import DAILY_LIMIT, PROFILES, advisor_input, recommend
+from metals.backtest import backtest
 
 st.set_page_config(page_title="Aurum | Oro y plata", page_icon="◈", layout="wide")
 style()
@@ -294,6 +296,16 @@ with tabs[1]:
             st.json({"parámetros": report["best_params"], "ponderación": report.get("best_weighting", "uniform"), "selección": report.get("selection", {}), "log_loss": report["xgboost"]["log_loss"], "Brier multiclase": report["xgboost"]["multiclass_brier"], "variables de contexto excluidas": report["excluded_context"], "entrenamiento final": report["final_train"]})
             st.caption("El modelo final se reentrena después de la evaluación. Las métricas del holdout corresponden al modelo evaluado, exportado por separado.")
         st.caption("Este periodo de prueba ya fue examinado en versiones previas: la comparación es retrospectiva y necesita validación prospectiva con nuevos meses.")
+        holdout_path = ARTIFACTS / metal / "holdout_predictions.csv"
+        if holdout_path.exists():
+            st.subheader("Backtesting en el periodo de prueba")
+            bt = backtest(pd.read_csv(holdout_path))
+            bt_table = pd.DataFrame({"Estrategia": ["Modelo: invertir sólo si predice Alcista", "Comprar y mantener"],
+                                     "Retorno acumulado": [bt["modelo"]["retorno_acumulado"], bt["comprar_y_mantener"]["retorno_acumulado"]],
+                                     "Caída máxima": [bt["modelo"]["caida_maxima"], bt["comprar_y_mantener"]["caida_maxima"]],
+                                     "Operaciones": [bt["modelo"]["operaciones"], bt["comprar_y_mantener"]["operaciones"]]})
+            st.dataframe(bt_table.style.format({"Retorno acumulado": "{:+.1%}", "Caída máxima": "{:.1%}"}), hide_index=True, width="stretch")
+            st.caption(f"{bt['meses']} meses del holdout ({bt['meses_invertido']} invertidos), comisión de {bt['comision']:.1%} por entrada o salida. Usa retornos entre promedios mensuales, no precios ejecutables; sin impuestos ni deslizamiento. No es una rentabilidad garantizada.")
         st.subheader("Sentimiento dentro de XGBoost")
         sc = report.get("sentiment_comparison")
         if sc:
@@ -332,6 +344,46 @@ with tabs[2]:
             summary_card("Señal orientativa", prediction["signal"], f"Mes objetivo {prediction['target_month'][:7]}", "caution" if prediction["signal"] == "Abstenerse" or prediction["risk"] == "Alto" else "")
         with c:
             summary_card(f"Tendencia: {prediction['trend']}", f"Riesgo {prediction['risk'].lower()}", f"Probabilidad máxima {prediction['max_probability']:.1%}")
+        with st.container(border=True):
+            st.markdown("#### Recomendación con IA")
+            profile = st.radio("Perfil del inversionista", PROFILES, index=1, horizontal=True, format_func=str.capitalize, key="advisor_profile")
+            relevant_news = recent_articles[(recent_articles.relevant == 1) & recent_articles.score.notna()] if not recent_articles.empty else recent_articles
+            headlines = [f"{title} (sentimiento {score:+.2f})" for title, score in zip(relevant_news.title, relevant_news.score)] if len(relevant_news) else []
+            latest_row = dataset[dataset.metal == metal].sort_values("date").iloc[-1]
+            advisor_payload = advisor_input(metal_label, prediction, report, latest_row, news_context, headlines, profile)
+            with closing(connect()) as advisor_conn:
+                advice = recommend(advisor_conn, advisor_payload, prediction)
+                if advice is None and st.button("Generar recomendación con IA", key="advisor_run"):
+                    with st.spinner("Consultando al LLM con los datos del sistema…"):
+                        advice = recommend(advisor_conn, advisor_payload, prediction, generate=True)
+            if advice is None:
+                st.caption(f"Acciones que permiten las reglas para este caso: {', '.join(advisor_payload['acciones_permitidas'])}. El LLM elige una y la justifica sólo con los datos del sistema.")
+            else:
+                if advice["notice"]:
+                    st.warning(advice["notice"])
+                rec = advice["recommendation"]
+                a, b = st.columns([1, 2])
+                with a:
+                    summary_card("Acción sugerida", rec["accion"], f"Alternativa: {rec['alternativa']}", "caution" if rec["accion"] in ("Abstenerse", "Esperar") else "")
+                with b:
+                    st.write(rec["justificacion"])
+                    st.write("**Riesgos:** " + " · ".join(rec["riesgos"]))
+                origin = {"llm": "LLM", "cache": "LLM (resultado guardado)", "reglas": "Reglas, sin LLM"}[advice["source"]]
+                details = [f"Origen: {origin}"]
+                if advice["source"] != "reglas":
+                    details.append(f"Modelo: {advice['model']}")
+                    if rec.get("confianza") is not None:
+                        details.append(f"Confianza del LLM: {rec['confianza']:.0%}")
+                    if advice.get("latency_ms"):
+                        details.append(f"Respuesta en {advice['latency_ms'] / 1000:.1f} s")
+                    if advice.get("tokens"):
+                        details.append(f"{advice['tokens']} tokens")
+                st.caption(" · ".join(details))
+                with st.expander("Ver la entrada enviada al LLM"):
+                    st.json(advice["input"])
+                with st.expander("Ver el prompt del sistema"):
+                    st.code(advice["prompt"], language=None)
+            st.caption(f"Proyecto académico: no es asesoría financiera ni ejecuta operaciones. Las reglas definen las acciones permitidas y el código valida la respuesta del LLM (cifras, acción y formato). Máximo {DAILY_LIMIT} consultas por día.")
         st.markdown("#### Escenarios de clasificación")
         scenario_cols = st.columns(3)
         lower, upper = last.price * (1 - THRESHOLDS[metal]), last.price * (1 + THRESHOLDS[metal])

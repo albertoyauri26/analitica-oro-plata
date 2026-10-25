@@ -32,3 +32,21 @@ def test_live_analysis_runs_without_password_once_per_cooldown(monkeypatch):
     assert calls == ["news-refresh", "predict"]
     assert any("Vuelve a intentarlo" in w.value for w in app.warning)
     st.cache_resource.clear()
+
+
+@pytest.mark.skipif(not DB.exists() or not (ARTIFACTS / "gold" / "report.json").exists(), reason="Requiere pipeline local real")
+def test_prescriptive_tab_shows_the_llm_recommendation(monkeypatch):
+    from metals import advisor
+    def fake(conn, payload, prediction, generate=False):
+        if not generate:
+            return None
+        rec = {"accion": payload["acciones_permitidas"][0], "justificacion": "Prueba del LLM.", "riesgos": ["Riesgo de prueba"],
+               "confianza": 0.7, "alternativa": payload["acciones_permitidas"][-1]}
+        return {"input": payload, "prompt": advisor.SYSTEM, "source": "llm", "notice": None, "model": "fixture",
+                "latency_ms": 1200, "tokens": 800, "recommendation": rec}
+    monkeypatch.setattr(advisor, "recommend", fake)
+    app = AppTest.from_file(str(ROOT / "app.py"), default_timeout=60).run()
+    assert not app.exception and app.radio(key="advisor_profile").value == "moderado"
+    app.button(key="advisor_run").click().run()
+    assert not app.exception
+    assert any("Prueba del LLM." in m.value for m in app.markdown)

@@ -61,3 +61,11 @@ Cada `git push` a `master` despliega una versión nueva. Si no ocurre, en Render
 | `HTTP 401` de Mistral | Clave vencida o incorrecta | Crear otra clave y actualizar `MISTRAL_API_KEY` en Environment |
 | Sigue apareciendo una versión vieja | No se desplegó el último commit | Manual Deploy → Deploy latest commit |
 | Primera carga lenta | Instancia gratuita suspendida | Normal en el plan gratuito; abrirla unos minutos antes de presentar |
+
+## 5. Actualización automática diaria (GitHub Actions)
+
+`.github/workflows/actualizar-noticias.yml` se ejecuta todos los días a las 12:00 UTC (7:00 en Lima) y también a mano desde la pestaña **Actions → Actualizar noticias y predicción → Run workflow**. Descarga las noticias, las analiza con Mistral, recalcula la predicción y guarda `data/metals.sqlite` y las predicciones en el repositorio. Render despliega ese commit, así la página conserva los datos aunque la instancia gratuita se reinicie.
+
+Configuración única: en GitHub, **Settings → Secrets and variables → Actions → New repository secret**, nombre `MISTRAL_API_KEY` y como valor la clave de Mistral. Sin el secreto, el flujo guarda las noticias y deja su análisis pendiente.
+
+Antes de subir cambios propios, ejecutar `git pull` para traer los commits automáticos.

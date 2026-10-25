@@ -77,6 +77,7 @@ flowchart TD
 11. [Fuentes específicas de noticias](docs/13_FUENTES_NOTICIAS.md).
 12. [Proveedores de sentimiento (Mistral, Gemini, FinBERT)](docs/14_PROVEEDORES_SENTIMIENTO.md).
 13. [Publicación gratuita en Render](docs/16_DESPLIEGUE_RENDER.md).
+14. [Recomendación prescriptiva con LLM](docs/17_RECOMENDACION_LLM.md).
 
 ## Alcance honesto
 

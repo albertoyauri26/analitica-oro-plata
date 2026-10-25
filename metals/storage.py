@@ -24,6 +24,10 @@ CREATE TABLE IF NOT EXISTS production (
  metal TEXT NOT NULL, year INTEGER NOT NULL, tonnes REAL NOT NULL CHECK(tonnes>0),
  available_at TEXT NOT NULL, source TEXT NOT NULL, fetched_at TEXT NOT NULL,
  PRIMARY KEY(metal,year,available_at));
+CREATE TABLE IF NOT EXISTS recommendations (
+ id INTEGER PRIMARY KEY, cache_key TEXT NOT NULL, metal TEXT NOT NULL, profile TEXT NOT NULL,
+ created_at TEXT NOT NULL, model TEXT, prompt_version TEXT NOT NULL, input_json TEXT NOT NULL,
+ output_json TEXT, status TEXT NOT NULL, detail TEXT, latency_ms INTEGER, tokens INTEGER);
 CREATE TABLE IF NOT EXISTS ingestion_log (
  id INTEGER PRIMARY KEY, source TEXT, fetched_at TEXT, status TEXT,
  rows_count INTEGER, detail TEXT, sha256 TEXT);
