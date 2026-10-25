@@ -101,9 +101,9 @@ def response_schema(actions):
 
 
 def invented_numbers(text, payload):
-    """Cifras del texto que no aparecen en la entrada (admite 0.65 escrito como 65 %)."""
+    """Cifras del texto que no aparecen en la entrada (admite 0.65 como 65 % y 55 % como 0.55)."""
     known = {float(n) for n in NUMBER.findall(json.dumps(payload, ensure_ascii=False))}
-    known |= {round(k * 100, 6) for k in known}
+    known |= {round(k * 100, 6) for k in known} | {round(k / 100, 6) for k in known}
     invented = []
     for raw in NUMBER.findall(text):
         number = float(raw.replace(",", "."))

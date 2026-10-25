@@ -74,6 +74,9 @@ def test_rules_define_the_allowed_actions():
 def test_validation_rejects_forbidden_actions_and_invented_numbers():
     data = payload()
     assert advisor.validate_recommendation(answer(), data).accion == "Esperar"
+    # La regla de 55% aparece como texto en los motivos; escribirla 0.55 no es una cifra inventada (falso positivo visto en Render).
+    rule = {**PREDICTION, "reasons": ["Evidencia predictiva insuficiente según regla de 55%."]}
+    assert advisor.validate_recommendation(answer(justificacion="No alcanza el umbral de 0.55."), payload("moderado", rule))
     with pytest.raises(ValueError, match="permitidas"):
         advisor.validate_recommendation(answer(accion=advisor.BUY), data)
     with pytest.raises(ValueError, match="cifras"):
