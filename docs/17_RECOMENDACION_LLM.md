@@ -97,4 +97,5 @@ Tokens medidos en los tres casos reales: 1 038, 1 079 y 1 056 por recomendación
 
 - La recomendación es académica: no considera capital, impuestos, costos reales ni objetivos personales.
 - El LLM puede cometer errores de interpretación sin números (casos 2 y 3); las reglas limitan su impacto a acciones permitidas.
+- En Render (25/10/2026, oro, perfil agresivo) el LLM volvió a comparar el macro-F1 con 0,55 pese a la instrucción del prompt; la acción (Abstenerse) fue correcta. En una prueba anterior escribió el umbral de 55 % como 0,55 y el validador lo rechazó por error: se corrigió para aceptar ambas formas (commit dd561da).
 - En Render gratuito el registro de recomendaciones se reinicia con la instancia; la copia del repositorio conserva las del último despliegue.
