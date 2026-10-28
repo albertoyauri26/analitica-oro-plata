@@ -69,7 +69,7 @@ button[role="tab"] {font-weight: 600;}
 .summary-card.gold {background: linear-gradient(120deg, rgba(227,179,65,0.18), rgba(227,179,65,0.04)); border-color: rgba(227,179,65,0.35);}
 .summary-card.silver {background: linear-gradient(120deg, rgba(167,184,207,0.16), rgba(167,184,207,0.04)); border-color: rgba(167,184,207,0.30);}
 .card-label {font-size: 0.83rem; font-weight: 600; color: #9aaac2;}
-.card-value {font-size: 1.8rem; line-height: 1.2; font-weight: 700; margin: 0.45rem 0; color: #f1f5fb; overflow-wrap: anywhere; font-family: "JetBrains Mono", Consolas, "Courier New", monospace; font-variant-numeric: tabular-nums;}
+.card-value {font-size: clamp(1.2rem, 1.55vw, 1.8rem); line-height: 1.2; font-weight: 700; margin: 0.45rem 0; color: #f1f5fb; overflow-wrap: break-word; font-family: "JetBrains Mono", Consolas, "Courier New", monospace; font-variant-numeric: tabular-nums;}
 .card-note {font-size: 0.83rem; color: #8a9bb5; line-height: 1.4;}
 .positive .card-value {color: #26c281;}
 .negative .card-value {color: #ff5f5f;}
