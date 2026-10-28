@@ -1,6 +1,6 @@
 {
   "metal": "silver",
-  "generated_at": "2026-10-27T17:17:43.723783+00:00",
+  "generated_at": "2026-10-28T17:47:47.119500+00:00",
   "origin": "2026-09-30",
   "target_month": "2026-10-31",
   "source_price_month": "2026-08-31",
@@ -22,86 +22,84 @@
   "rules": "Heurística académica v1; no calibrada con pérdidas financieras.",
   "news_context": {
     "metal": "silver",
-    "as_of": "2026-10-27T17:17:43.665954+00:00",
+    "as_of": "2026-10-28T17:47:47.063067+00:00",
     "window_days": 31,
     "requested": 5,
     "selected": 5,
-    "analyzed": 5,
-    "relevant": 4,
-    "pending": 0,
+    "analyzed": 0,
+    "relevant": 0,
+    "pending": 5,
     "missing_articles": 0,
-    "mean_sentiment": -0.3,
-    "tone": "Negativo",
+    "mean_sentiment": null,
+    "tone": "Sin dato",
     "news_ids": [
-      "2de9a10a34f55efbf7673da013c26395938d77aa6930dd74d767c71b20c2c932",
-      "522f8abd8b879b22aeba7de10b6294e55ed4d46d390ef262c45f14f5cf744514",
-      "83994321fe9bbd1a1ac96ac969a6d646870d87e0970861bdca48e602adfd341f",
-      "0c6f17e470d32b8fdb38134067fcd3e8b24cf18723edf7accfa686a4d35ef246",
-      "95d61ecc11a44a9c0562c5c8f144a27cf1f788ea00fdaad877d5f6ee3c0d1c87"
+      "7e12e4ca8383dc38fce41f3c3fe584a9bec7d029f7f418bbf33356384a41a402",
+      "ec040e6e5fc7c4a8e53c2a16f7b4390f2ad5dee44b9c34b1f888658fea0158ca",
+      "4d07be31ab12838b0be57886acf3ac3413fe9f8933141ca6fdf7415bca5e4ea1",
+      "b6f049a6c3bae820bd9aef93b83febf24918a86da36f443f6d94546f1d0db085",
+      "2cdffff9de56f93fd5a8a637b029f8016f13acf0d88cf589362c3515ffc52af7"
     ],
-    "providers": {
-      "ministral-14b-2512": 5
-    },
+    "providers": {},
     "article_audit": [
       {
-        "id": "2de9a10a34f55efbf7673da013c26395938d77aa6930dd74d767c71b20c2c932",
-        "published_at": "2026-10-27T15:58:44+00:00",
-        "fetched_at": "2026-10-27T17:17:10.538671+00:00",
-        "analyzed_at": "2026-10-27T17:17:24.180164+00:00",
-        "relevant": true,
-        "score": 0.5,
-        "provider": "ministral-14b-2512"
-      },
-      {
-        "id": "522f8abd8b879b22aeba7de10b6294e55ed4d46d390ef262c45f14f5cf744514",
-        "published_at": "2026-10-27T14:31:07+00:00",
-        "fetched_at": "2026-10-27T17:17:10.538671+00:00",
-        "analyzed_at": "2026-10-27T17:17:33.222857+00:00",
-        "relevant": true,
-        "score": -1.0,
-        "provider": "ministral-14b-2512"
-      },
-      {
-        "id": "83994321fe9bbd1a1ac96ac969a6d646870d87e0970861bdca48e602adfd341f",
-        "published_at": "2026-10-27T14:15:39+00:00",
-        "fetched_at": "2026-10-27T17:17:10.538671+00:00",
-        "analyzed_at": "2026-10-27T17:17:36.580773+00:00",
-        "relevant": true,
-        "score": 0.0,
-        "provider": "ministral-14b-2512"
-      },
-      {
-        "id": "0c6f17e470d32b8fdb38134067fcd3e8b24cf18723edf7accfa686a4d35ef246",
-        "published_at": "2026-10-27T13:59:57+00:00",
-        "fetched_at": "2026-10-27T17:17:10.538671+00:00",
-        "analyzed_at": "2026-10-27T17:17:39.909734+00:00",
-        "relevant": true,
-        "score": -0.7,
-        "provider": "ministral-14b-2512"
-      },
-      {
-        "id": "95d61ecc11a44a9c0562c5c8f144a27cf1f788ea00fdaad877d5f6ee3c0d1c87",
-        "published_at": "2026-10-27T13:15:00+00:00",
-        "fetched_at": "2026-10-27T17:17:10.538671+00:00",
-        "analyzed_at": "2026-10-27T17:17:41.543502+00:00",
-        "relevant": false,
+        "id": "7e12e4ca8383dc38fce41f3c3fe584a9bec7d029f7f418bbf33356384a41a402",
+        "published_at": "2026-10-28T17:35:05+00:00",
+        "fetched_at": "2026-10-28T17:47:41.573522+00:00",
+        "analyzed_at": null,
+        "relevant": null,
         "score": null,
-        "provider": "ministral-14b-2512"
+        "provider": null
+      },
+      {
+        "id": "ec040e6e5fc7c4a8e53c2a16f7b4390f2ad5dee44b9c34b1f888658fea0158ca",
+        "published_at": "2026-10-28T12:49:52+00:00",
+        "fetched_at": "2026-10-28T17:47:41.573522+00:00",
+        "analyzed_at": null,
+        "relevant": null,
+        "score": null,
+        "provider": null
+      },
+      {
+        "id": "4d07be31ab12838b0be57886acf3ac3413fe9f8933141ca6fdf7415bca5e4ea1",
+        "published_at": "2026-10-28T12:20:08+00:00",
+        "fetched_at": "2026-10-28T17:47:41.573522+00:00",
+        "analyzed_at": null,
+        "relevant": null,
+        "score": null,
+        "provider": null
+      },
+      {
+        "id": "b6f049a6c3bae820bd9aef93b83febf24918a86da36f443f6d94546f1d0db085",
+        "published_at": "2026-10-28T12:15:00+00:00",
+        "fetched_at": "2026-10-28T17:47:41.573522+00:00",
+        "analyzed_at": null,
+        "relevant": null,
+        "score": null,
+        "provider": null
+      },
+      {
+        "id": "2cdffff9de56f93fd5a8a637b029f8016f13acf0d88cf589362c3515ffc52af7",
+        "published_at": "2026-10-28T11:18:53+00:00",
+        "fetched_at": "2026-10-28T17:47:41.573522+00:00",
+        "analyzed_at": null,
+        "relevant": null,
+        "score": null,
+        "provider": null
       }
     ],
     "score_semantics": "Interpretación contextual de un LLM (Mistral o Gemini) o, sin LLM, tono financiero de FinBERT; no efecto causal del precio.",
     "role": "Contexto actual y escenario experimental separado; no modifica la predicción XGBoost evaluada."
   },
-  "news_reading": "El tono de las noticias coincide con la dirección de la tendencia; no aumenta por sí mismo la probabilidad del modelo.",
+  "news_reading": "Sin sentimiento relevante disponible para contrastar la tendencia.",
   "hybrid": {
     "version": "hybrid_scenario_v1",
-    "status": "applied_experimental",
+    "status": "blocked",
     "experimental": true,
     "validated": false,
-    "generated_at": "2026-10-27T17:17:43.724102+00:00",
+    "generated_at": "2026-10-28T17:47:47.119805+00:00",
     "base_origin": "2026-09-30",
     "target_month": "2026-10-31",
-    "news_as_of": "2026-10-27T17:17:43.665954+00:00",
+    "news_as_of": "2026-10-28T17:47:47.063067+00:00",
     "metal": "silver",
     "baseline_probabilities": {
       "Bajista": 0.6496156454086304,
@@ -109,25 +107,28 @@
       "Alcista": 0.25881829857826233
     },
     "hybrid_probabilities": {
-      "Bajista": 0.6589331041574478,
+      "Bajista": 0.6496156454086304,
       "Neutral": 0.0915660709142685,
-      "Alcista": 0.24950083982944488
+      "Alcista": 0.25881829857826233
     },
     "baseline_trend": "Bajista",
     "trend": "Bajista",
     "requested_weight": 0.15,
-    "applied_weight": 0.036,
+    "applied_weight": 0.0,
     "probability_changes": {
-      "Bajista": 0.009317458748817398,
+      "Bajista": 0.0,
       "Neutral": 0.0,
-      "Alcista": -0.009317458748817453
+      "Alcista": 0.0
     },
     "baseline_confidence": 0.6496156454086304,
     "signal": "Esperar por riesgo alto",
     "risk": "Alto",
     "decision_uses_hybrid": false,
     "reasons": [
-      "Lote completo y vigente: se aplica una hipótesis direccional acotada, sin cambiar la señal base."
+      "Falta completar o fechar el análisis de una de las cinco noticias.",
+      "Se requieren cinco noticias analizadas antes de combinar la predicción.",
+      "Se requieren al menos tres noticias relevantes con sentimiento válido para este metal.",
+      "La cobertura declarada no coincide con los cinco análisis auditados."
     ],
     "baseline_reasons": [
       "Volatilidad anualizada de 12 retornos mensuales >= 30%.",
@@ -142,11 +143,8 @@
       "max_snapshot_age_hours": 24,
       "formula": "h=(1-a)*p+a*q; a=peso*(relevantes/5)*abs(sentimiento)",
       "neutral_probability": "Se conserva la probabilidad Neutral del modelo base.",
-      "relevant_articles": 4,
-      "mean_sentiment": -0.3,
-      "relevant_coverage": 0.8,
-      "transferred_probability": 0.009317458748817443,
-      "score_semantics": "Interpretación contextual de un LLM (Mistral o Gemini) o, sin LLM, tono financiero de FinBERT; no efecto causal del precio."
+      "relevant_articles": 0,
+      "mean_sentiment": null
     },
     "limitations": [
       "Escenario experimental con probabilidades orientativas: no fue entrenado ni validado temporalmente.",
@@ -156,8 +154,6 @@
       "Noticias recientes actualizan este escenario a su fecha de emisión; no modifican predicciones ni evaluaciones históricas.",
       "La mezcla no eleva la confianza de decisión ni cambia la señal o el riesgo base, incluso si cambia la tendencia mostrada."
     ],
-    "providers": [
-      "ministral-14b-2512"
-    ]
+    "providers": []
   }
 }
