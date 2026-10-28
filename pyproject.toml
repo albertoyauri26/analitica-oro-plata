@@ -1,0 +1,26 @@
+# Sólo para Vercel. La instalación local y Render (Docker) usan requirements-lock.txt.
+[project]
+name = "aurum-oro-plata"
+version = "1.0.0"
+requires-python = ">=3.13,<3.14"
+# Mismas versiones que requirements-lock.txt en las librerías que fijan los resultados.
+dependencies = [
+    "pandas==2.3.3",
+    "numpy==2.5.3",
+    "scikit-learn==1.9.1",
+    # Mismo XGBoost sin CUDA: ~6 MB en lugar de cientos, para que la función de Vercel arranque rápido.
+    "xgboost-cpu==3.4.1",
+    "streamlit==1.64.0",
+    "plotly==6.9.0",
+    "requests==2.34.2",
+    "openpyxl==3.1.5",
+    "feedparser==6.0.14",
+    "python-dotenv==1.2.3",
+    "pydantic==2.13.5",
+]
+
+[tool.uv]
+package = false
+
+[tool.vercel]
+entrypoint = "vercel_app:app"
