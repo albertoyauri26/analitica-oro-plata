@@ -1,4 +1,5 @@
 """Estilo y resúmenes de la interfaz. Sin llamadas externas ni credenciales."""
+from datetime import datetime, timezone
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -12,12 +13,41 @@ SILVER = "#A7B8CF"
 GREEN = "#26C281"
 RED = "#FF5F5F"
 COLORS = {"Alcista": GREEN, "Neutral": SILVER, "Bajista": RED, "gold": GOLD, "silver": SILVER}
+MONTHS = ("enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre")
 
 CSS = """
 <style>
+:root {--accent: #E3B341;}
 .stApp {background: linear-gradient(160deg, #0a101c 0%, #0d1526 55%, #0b1320 100%); color: #e6ecf5;}
-.block-container {padding-top: 2rem; padding-bottom: 3rem; max-width: 1550px;}
+.block-container {padding-top: 2.6rem; padding-bottom: 3rem; max-width: 1550px;}
 [data-testid="stSidebar"] {background: #0d1524; border-right: 1px solid #1f2c44;}
+/* Escritorio: la barra lateral flota oculta y se abre al pasar el mouse, tocar la pestaña "Filtros" o enfocarla con el teclado. */
+@media (min-width: 769px) {
+ section[data-testid="stSidebar"] {position: fixed !important; top: 0; left: 0; bottom: 0; height: 100vh !important; overflow: visible !important;
+   transform: translateX(calc(-100% + 6px)); transition: transform .22s ease-out, box-shadow .22s ease-out;}
+ section[data-testid="stSidebar"]:hover, section[data-testid="stSidebar"]:focus-within {transform: translateX(0); box-shadow: 14px 0 36px rgba(0,0,0,.55);}
+ section[data-testid="stSidebar"]::after {content: "Filtros"; position: absolute; top: 40%; right: -30px; width: 30px; padding: .9rem 0; writing-mode: vertical-rl;
+   text-align: center; font-size: .75rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: #0a101c; background: var(--accent);
+   border-radius: 0 9px 9px 0; cursor: pointer; transition: opacity .15s;}
+ section[data-testid="stSidebar"]:hover::after, section[data-testid="stSidebar"]:focus-within::after {opacity: 0;}
+ [data-testid="stSidebarCollapseButton"], [data-testid="stSidebarResizeHandle"], [data-testid="stExpandSidebarButton"] {display: none !important;}
+}
+@media (prefers-reduced-motion: reduce) {section[data-testid="stSidebar"] {transition: none !important;}}
+.page-title {display: flex; align-items: baseline; gap: .9rem; flex-wrap: wrap;}
+.page-title .brand {margin: 0;}
+.page-title .lede {margin: 0;}
+.live {display: grid; grid-template-columns: minmax(260px, 1.5fr) minmax(180px, 1fr) minmax(220px, 1fr); gap: 1.2rem; align-items: center;
+  border: 1px solid #1f2c44; border-left: 4px solid var(--accent); border-radius: 16px; background: #111a2b; padding: 1.1rem 1.4rem; margin: .4rem 0 .9rem;}
+.live-kicker {font-size: .74rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent);}
+.live-state {margin-left: .5rem; color: #8a9bb5; letter-spacing: .08em;}
+.live-state.on {color: #4ee0a0;}
+.live-price {font-size: 2.3rem; font-weight: 700; color: #f1f5fb; margin: .25rem 0; font-family: "JetBrains Mono", Consolas, "Courier New", monospace; font-variant-numeric: tabular-nums;}
+.live-change {font-size: 1rem; font-weight: 700; margin-left: .6rem; padding: .15rem .5rem; border-radius: 7px; vertical-align: middle; white-space: nowrap; display: inline-block;}
+.live-change.up {color: #26c281; background: rgba(38,194,129,.12);}
+.live-change.down {color: #ff5f5f; background: rgba(255,95,95,.12);}
+.live-meta {font-size: .82rem; color: #8a9bb5; line-height: 1.5;}
+.live-month {font-size: 1.35rem; font-weight: 700; color: #e6ecf5; margin: .25rem 0; font-family: "JetBrains Mono", Consolas, "Courier New", monospace;}
+.live svg {width: 100%; height: 64px;}
 h1 {font-size: 2.05rem !important; line-height: 1.18 !important; letter-spacing: -0.035em; font-weight: 650 !important;}
 h2 {font-size: 1.45rem !important; letter-spacing: -0.02em;}
 h3 {font-size: 1.12rem !important; color: #f1f5fb;}
@@ -26,9 +56,10 @@ h3 {font-size: 1.12rem !important; color: #f1f5fb;}
 [data-testid="stMetricValue"] {font-size: 1.7rem; color: #f1f5fb; font-family: "JetBrains Mono", Consolas, "Courier New", monospace; font-variant-numeric: tabular-nums;}
 [data-baseweb="tab-list"] {gap: 1.3rem; border-bottom: 1px solid #1f2c44;}
 button[role="tab"] {font-weight: 600;}
-.eyebrow {font-size: 0.73rem; text-transform: uppercase; letter-spacing: 0.17em; color: #e3b341; margin-bottom: 0.7rem;}
+[data-baseweb="tab-highlight"] {background-color: var(--accent) !important;}
 .lede {font-size: 1rem; color: #8a9bb5; max-width: 900px; margin: 0.1rem 0 1.5rem; line-height: 1.6;}
-.brand {color: #e3b341; font-weight: 750; font-size: 1.5rem; letter-spacing: 0.12em; margin: 0.3rem 0;}
+.brand {color: var(--accent); font-weight: 750; font-size: 1.5rem; letter-spacing: 0.12em; margin: 0.3rem 0;}
+.section-note {color: #8a9bb5; font-size: .9rem; margin: -.4rem 0 .8rem;}
 [data-testid="stExpander"], [data-testid="stVerticalBlockBorderWrapper"] {border-radius: 12px; border-color: #1f2c44;}
 [data-testid="stPlotlyChart"] {background: #0f1829; border: 1px solid #1f2c44; border-radius: 12px; overflow: hidden;}
 .summary-card {border: 1px solid #1f2c44; border-radius: 14px; background: #111a2b; padding: 1rem 1.15rem; min-height: 132px; margin-bottom: 0.6rem; box-shadow: 0 4px 18px rgba(0,0,0,0.35);}
@@ -48,18 +79,13 @@ button[role="tab"] {font-weight: 600;}
 .news-card a:hover {color: #e3b341;}
 .news-meta {color: #7f90aa; font-size: 0.76rem; margin-top: 0.35rem;}
 .tone {display: inline-block; background: #16213a; border-radius: 5px; padding: 0.15rem 0.4rem; margin-top: 0.3rem; font-size: 0.76rem; color: #a7b8cf;}
-.hero {border-radius: 18px; padding: 1.35rem 1.6rem; margin: 0 0 1rem; background: linear-gradient(120deg,#0f1b30,#18294a 65%,#1f2a3a); border: 1px solid rgba(227,179,65,0.25); color:#fff; display:flex; justify-content:space-between; align-items:center; gap:1rem;}
-.hero h1 {color:#fff; font-size:1.9rem !important; margin:0; padding:0.25rem 0 0;}
-.hero p {color:#a9b9d0; margin:0.4rem 0 0; max-width:750px; font-size:0.85rem;}
-.hero-kicker {font-size:0.7rem; font-weight:650; color:#e3b341; letter-spacing:0.16em; text-transform:uppercase;}
-.hero-mark {font-size:2.8rem; color:#e3b341; border:1px solid rgba(227,179,65,0.4); border-radius:50%; width:76px; height:76px; flex-shrink:0; text-align:center; line-height:76px;}
 .status-strip {display:flex; flex-wrap:wrap; gap:0.5rem; margin:0 0 1rem;}
 .status-chip {font-size:0.76rem; color:#a7b8cf; background:#111a2b; border:1px solid #1f2c44; border-radius:20px; padding:0.28rem 0.7rem;}
 .status-chip.ready {background:rgba(38,194,129,0.12); border-color:rgba(38,194,129,0.35); color:#4ee0a0;}
 .status-chip.pending {background:rgba(245,185,66,0.12); border-color:rgba(245,185,66,0.35); color:#f5c766;}
 .stButton > button, .stDownloadButton > button {border-radius: 9px;}
 @media (max-width: 800px) {
- .block-container {padding-top: 1.3rem; padding-left: 1rem; padding-right: 1rem;}
+ .block-container {padding-top: 3.4rem; padding-left: 1rem; padding-right: 1rem;}
  h1 {font-size: 1.65rem !important;}
  [data-testid="stMetricValue"] {font-size: 1.4rem;}
  [data-baseweb="tab-list"] {gap: 0.6rem;}
@@ -67,7 +93,7 @@ button[role="tab"] {font-weight: 600;}
  [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {flex: 1 1 100%; width: 100%;}
  [data-testid="stHorizontalBlock"]:has([data-testid="stMetric"]) > [data-testid="stColumn"] {flex: 1 1 calc(50% - 1rem); width: calc(50% - 1rem);}
  [data-testid="stHorizontalBlock"]:has(.summary-card) > [data-testid="stColumn"] {flex: 1 1 calc(50% - 1rem); width: calc(50% - 1rem);}
- .hero {padding:1.1rem;}.hero-mark {display:none;}.hero h1{font-size:1.7rem !important;}
+ .live {grid-template-columns: 1fr; gap: .7rem; padding: 1rem;}.live-price {font-size: 1.8rem;}
  .card-value {font-size:1.5rem;}.card-label,.card-note {font-size:0.78rem;}
 }
 </style>
@@ -77,18 +103,56 @@ def style():
     st.markdown(CSS, unsafe_allow_html=True)
 
 
-def hero():
-    st.markdown('<div class="hero"><div><div class="hero-kicker">Aurum · Observatorio de metales</div>'
-                '<h1>Oro y plata, con evidencia.</h1><p>Sistema de analítica predictiva para la inversión en metales preciosos</p>'
-                '</div><div class="hero-mark">◈</div></div>', unsafe_allow_html=True)
+def accent(metal):
+    """El color del metal elegido identifica toda la página (pestañas, encabezado, botón de filtros)."""
+    st.markdown(f"<style>:root {{--accent: {COLORS[metal]};}}</style>", unsafe_allow_html=True)
 
 
-def status_strip(metal, price_month, context):
+def month_name(date):
+    date = pd.Timestamp(date)
+    return f"{MONTHS[date.month - 1]} {date.year}"
+
+
+def sparkline(values, color, width=240, height=64):
+    if len(values) < 2:
+        return ""
+    low, high = min(values), max(values)
+    span = high - low or 1
+    points = " ".join(f"{i * width / (len(values) - 1):.1f},{4 + (high - v) / span * (height - 8):.1f}" for i, v in enumerate(values))
+    return (f'<svg viewBox="0 0 {width} {height}" preserveAspectRatio="none" role="img" aria-label="Recorrido del precio durante la sesión: '
+            f'mínimo {low:,.2f}, máximo {high:,.2f}"><polyline points="{points}" fill="none" stroke="{color}" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>')
+
+
+def live_header(label, symbol, metal, quote, monthly_price, monthly_date, now=None):
+    """Cotización en vivo (referencial) junto al promedio mensual que usa el modelo."""
+    month = f'<div><div class="live-kicker">Promedio mensual del modelo</div><div class="live-month">US$ {monthly_price:,.2f}</div>' \
+            f'<div class="live-meta">{escape(month_name(monthly_date).capitalize())} · Banco Mundial</div>'
+    if quote is None:
+        st.markdown(f'<div class="live"><div><div class="live-kicker">{escape(label)} · {symbol}/USD<span class="live-state">sin conexión</span></div>'
+                    f'<div class="live-meta">La cotización en vivo no está disponible ahora; los reportes usan los promedios mensuales.</div></div><div></div>{month}</div></div>',
+                    unsafe_allow_html=True)
+        return
+    age = ((now or datetime.now(timezone.utc)) - quote["time"]).total_seconds() / 60
+    state = '<span class="live-state on">● en vivo</span>' if age <= 30 else '<span class="live-state">mercado cerrado</span>'
+    updated = f"hace {max(int(age), 0)} min" if age < 60 else quote["time"].strftime("%d/%m %H:%M UTC")
+    change = ""
+    if quote["change"] is not None:
+        change = f'<span class="live-change {"up" if quote["change"] >= 0 else "down"}">{"▲" if quote["change"] >= 0 else "▼"} {abs(quote["change"]):.2%} hoy</span>'
+    day = " · ".join(f"{name} {value:,.2f}" for name, value in (("Máx.", quote["high"]), ("Mín.", quote["low"]), ("Cierre anterior", quote["previous_close"])) if value)
+    versus = quote["price"] / monthly_price - 1
+    st.markdown(f'<div class="live"><div><div class="live-kicker">{escape(label)} · {symbol}/USD{state}</div>'
+                f'<div class="live-price">US$ {quote["price"]:,.2f}{change}</div>'
+                f'<div class="live-meta">{escape(day)}{"<br>" if day else ""}Actualizado {escape(updated)} · {escape(quote["source"])}</div></div>'
+                f'<div>{sparkline(quote["intraday"], COLORS[metal])}</div>'
+                f'{month}<div class="live-meta">Hoy está {versus:+.1%} frente a ese promedio.</div></div></div>', unsafe_allow_html=True)
+
+
+def status_strip(price_month, context):
     ready = context["analyzed"] == context["requested"] and context["selected"] == context["requested"]
     providers = sorted({provider_name(model) for model in context.get("providers", {})})
-    items = [(metal, ""), (f"Precios: {price_month}", ""),
+    items = [(f"Datos mensuales hasta {price_month}", ""),
              (f"Noticias analizadas: {context['analyzed']}/{context['requested']}", "ready" if ready else "pending"),
-             (" + ".join(providers) if providers else "Análisis pendiente", "")]
+             ("Sentimiento: " + " + ".join(providers) if providers else "Análisis pendiente", "")]
     st.markdown('<div class="status-strip">' + ''.join(f'<span class="status-chip {tone}">{escape(label)}</span>' for label, tone in items) + '</div>', unsafe_allow_html=True)
 
 

@@ -1,22 +1,37 @@
 """Prueba de integración con los datos reales presentes, sin descargar ni llamar a Gemini."""
+from datetime import datetime, timezone
 from pathlib import Path
 import pytest
 import streamlit as st
-from metals import cli
+from metals import cli, live_quotes
 from streamlit.testing.v1 import AppTest
 from metals.config import ROOT, DB, ARTIFACTS
 
+
+@pytest.fixture(autouse=True)
+def no_live_quotes(monkeypatch):
+    # Sin red: la cotización en vivo no responde, salvo en la prueba que la simula.
+    monkeypatch.setattr(live_quotes, "quote", lambda metal, session=None: None)
+    st.cache_data.clear()
+    yield
+    st.cache_data.clear()
+
+
 @pytest.mark.skipif(not DB.exists() or not (ARTIFACTS / "gold" / "report.json").exists(), reason="Requiere pipeline local real")
-def test_dashboard_gold_and_silver():
+def test_dashboard_gold_and_silver(monkeypatch):
+    fake = {"price": 54.0, "previous_close": 54.5, "change": 54.0 / 54.5 - 1, "high": 55.0, "low": 53.5,
+            "time": datetime.now(timezone.utc), "source": "Prueba", "intraday": [54.5, 54.2, 54.0]}
+    monkeypatch.setattr(live_quotes, "quote", lambda metal, session=None: fake)
     app = AppTest.from_file(str(ROOT / "app.py"), default_timeout=60).run()
     assert not app.exception
     assert len(app.tabs) == 5
-    app.sidebar.selectbox[0].select("Plata").run()
+    app.segmented_control(key="metal").set_value("Plata").run()
     assert not app.exception
     text = "\n".join(item.value for item in app.markdown)
     assert "Plata · tendencia mensual" in text
     assert "Noticias de plata" in text
     assert "Sin dato" in text or "Sentimiento reciente" in text
+    assert "US$ 54.00" in text and "▼ 0.92% hoy" in text and "Ratio oro/plata" in text
 
 @pytest.mark.skipif(not DB.exists() or not (ARTIFACTS / "gold" / "report.json").exists(), reason="Requiere pipeline local real")
 def test_live_analysis_runs_without_password_once_per_cooldown(monkeypatch):
