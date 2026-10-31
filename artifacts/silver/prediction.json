@@ -1,6 +1,6 @@
 {
   "metal": "silver",
-  "generated_at": "2026-10-30T17:38:35.464999+00:00",
+  "generated_at": "2026-10-31T16:42:42.591320+00:00",
   "origin": "2026-09-30",
   "target_month": "2026-10-31",
   "source_price_month": "2026-08-31",
@@ -22,7 +22,7 @@
   "rules": "Heurística académica v1; no calibrada con pérdidas financieras.",
   "news_context": {
     "metal": "silver",
-    "as_of": "2026-10-30T17:38:35.406610+00:00",
+    "as_of": "2026-10-31T16:42:42.528423+00:00",
     "window_days": 31,
     "requested": 5,
     "selected": 5,
@@ -33,57 +33,57 @@
     "mean_sentiment": -1.0,
     "tone": "Negativo",
     "news_ids": [
-      "b4096a06c3b4799e50f8f24beea2ffff32508158b879b3a4bc42b630f6c8ca37",
-      "0437c502d1f3d62a305794e4f007a89a723b0b0836337fada208779835374adf",
-      "86e886734fbf8a08a5ed24f481b28f8f32043ee43c442df876301163f40ae516",
-      "bfbe0e171c2fe8ed5886ba3568e749d44e72785b4529200063ed78a7588a6ba6",
-      "beb7565536078afe440ed0cb9f6a4d738aa07ceeed63c334884c1119639d1cc9"
+      "0f2631117dd9da7f831cd62188628b27600fd3265cb275a481bd0117df9ac741",
+      "89e292d0df6f0e9367bbe106c282ba40547d3d463170d71d04fdf13bc18e334c",
+      "4ef2d5f483fe022dfa5072c06f225a6e2d34d7b8bff07af8fb4539b62da7182c",
+      "c617063915d81bd444e582ec38b8335276fd480377a310ab66870fb78ce0a057",
+      "421bfadea4da769774f7c21e815bd86e62d31053df4c87d204092f1f10092de3"
     ],
     "providers": {
       "ministral-14b-2512": 5
     },
     "article_audit": [
       {
-        "id": "b4096a06c3b4799e50f8f24beea2ffff32508158b879b3a4bc42b630f6c8ca37",
-        "published_at": "2026-10-30T17:07:02+00:00",
-        "fetched_at": "2026-10-30T17:38:02.024101+00:00",
-        "analyzed_at": "2026-10-30T17:38:09.613141+00:00",
-        "relevant": true,
-        "score": -1.0,
-        "provider": "ministral-14b-2512"
-      },
-      {
-        "id": "0437c502d1f3d62a305794e4f007a89a723b0b0836337fada208779835374adf",
-        "published_at": "2026-10-30T16:30:49+00:00",
-        "fetched_at": "2026-10-30T17:38:02.024101+00:00",
-        "analyzed_at": "2026-10-30T17:38:23.509030+00:00",
-        "relevant": true,
-        "score": -1.0,
-        "provider": "ministral-14b-2512"
-      },
-      {
-        "id": "86e886734fbf8a08a5ed24f481b28f8f32043ee43c442df876301163f40ae516",
-        "published_at": "2026-10-30T16:08:26+00:00",
-        "fetched_at": "2026-10-30T17:38:02.024101+00:00",
-        "analyzed_at": "2026-10-30T17:38:26.332492+00:00",
+        "id": "0f2631117dd9da7f831cd62188628b27600fd3265cb275a481bd0117df9ac741",
+        "published_at": "2026-10-31T05:20:42+00:00",
+        "fetched_at": "2026-10-31T16:42:18.265031+00:00",
+        "analyzed_at": "2026-10-31T16:42:25.122789+00:00",
         "relevant": false,
         "score": null,
         "provider": "ministral-14b-2512"
       },
       {
-        "id": "bfbe0e171c2fe8ed5886ba3568e749d44e72785b4529200063ed78a7588a6ba6",
-        "published_at": "2026-10-30T16:07:03+00:00",
-        "fetched_at": "2026-10-30T17:38:02.024101+00:00",
-        "analyzed_at": "2026-10-30T17:38:29.919528+00:00",
+        "id": "89e292d0df6f0e9367bbe106c282ba40547d3d463170d71d04fdf13bc18e334c",
+        "published_at": "2026-10-31T00:02:52+00:00",
+        "fetched_at": "2026-10-31T16:42:18.265031+00:00",
+        "analyzed_at": "2026-10-31T16:42:28.446670+00:00",
         "relevant": true,
         "score": -1.0,
         "provider": "ministral-14b-2512"
       },
       {
-        "id": "beb7565536078afe440ed0cb9f6a4d738aa07ceeed63c334884c1119639d1cc9",
-        "published_at": "2026-10-30T15:56:36+00:00",
-        "fetched_at": "2026-10-30T17:38:02.024101+00:00",
-        "analyzed_at": "2026-10-30T17:38:32.777728+00:00",
+        "id": "4ef2d5f483fe022dfa5072c06f225a6e2d34d7b8bff07af8fb4539b62da7182c",
+        "published_at": "2026-10-30T21:36:42+00:00",
+        "fetched_at": "2026-10-31T16:42:18.265031+00:00",
+        "analyzed_at": "2026-10-31T16:42:34.294450+00:00",
+        "relevant": true,
+        "score": -1.0,
+        "provider": "ministral-14b-2512"
+      },
+      {
+        "id": "c617063915d81bd444e582ec38b8335276fd480377a310ab66870fb78ce0a057",
+        "published_at": "2026-10-30T21:13:49+00:00",
+        "fetched_at": "2026-10-31T16:42:18.265031+00:00",
+        "analyzed_at": "2026-10-31T16:42:37.357868+00:00",
+        "relevant": true,
+        "score": -1.0,
+        "provider": "ministral-14b-2512"
+      },
+      {
+        "id": "421bfadea4da769774f7c21e815bd86e62d31053df4c87d204092f1f10092de3",
+        "published_at": "2026-10-30T20:41:47+00:00",
+        "fetched_at": "2026-10-31T16:42:18.265031+00:00",
+        "analyzed_at": "2026-10-31T16:42:40.177911+00:00",
         "relevant": true,
         "score": -1.0,
         "provider": "ministral-14b-2512"
@@ -98,10 +98,10 @@
     "status": "applied_experimental",
     "experimental": true,
     "validated": false,
-    "generated_at": "2026-10-30T17:38:35.465246+00:00",
+    "generated_at": "2026-10-31T16:42:42.591664+00:00",
     "base_origin": "2026-09-30",
     "target_month": "2026-10-31",
-    "news_as_of": "2026-10-30T17:38:35.406610+00:00",
+    "news_as_of": "2026-10-31T16:42:42.528423+00:00",
     "metal": "silver",
     "baseline_probabilities": {
       "Bajista": 0.6496156454086304,
