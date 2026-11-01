@@ -1,6 +1,6 @@
 {
   "metal": "silver",
-  "generated_at": "2026-10-31T16:42:42.591320+00:00",
+  "generated_at": "2026-11-01T17:32:38.847096+00:00",
   "origin": "2026-09-30",
   "target_month": "2026-10-31",
   "source_price_month": "2026-08-31",
@@ -14,76 +14,77 @@
   "volatility_12m": 0.614391163057176,
   "risk": "Alto",
   "risk_score": 4,
-  "signal": "Esperar por riesgo alto",
+  "signal": "Abstenerse",
   "reasons": [
+    "Predicción vencida o desactualizada: actualizar datos y reentrenar.",
     "Volatilidad anualizada de 12 retornos mensuales >= 30%.",
     "Caída desde máximo de 12 meses >= 15%."
   ],
   "rules": "Heurística académica v1; no calibrada con pérdidas financieras.",
   "news_context": {
     "metal": "silver",
-    "as_of": "2026-10-31T16:42:42.528423+00:00",
+    "as_of": "2026-11-01T17:32:38.787257+00:00",
     "window_days": 31,
     "requested": 5,
     "selected": 5,
     "analyzed": 5,
-    "relevant": 4,
+    "relevant": 3,
     "pending": 0,
     "missing_articles": 0,
     "mean_sentiment": -1.0,
     "tone": "Negativo",
     "news_ids": [
-      "0f2631117dd9da7f831cd62188628b27600fd3265cb275a481bd0117df9ac741",
-      "89e292d0df6f0e9367bbe106c282ba40547d3d463170d71d04fdf13bc18e334c",
-      "4ef2d5f483fe022dfa5072c06f225a6e2d34d7b8bff07af8fb4539b62da7182c",
-      "c617063915d81bd444e582ec38b8335276fd480377a310ab66870fb78ce0a057",
-      "421bfadea4da769774f7c21e815bd86e62d31053df4c87d204092f1f10092de3"
+      "b26124e5323d5d7b7f7d05007d156a52fd3438111d650113de6a6b60d33e0f36",
+      "80e1c4e5d3dacfc939add9eedbf246b538ca1eb0bfa9f2009695e2659a079cf0",
+      "5a14edbf094a33adebcc915762179bc4056d2b55357cfce6d7379905b0ea6c67",
+      "6613c080a0e70b3714bb15448d35e8cffa23acbc3ab069b89fbe7d54e438a593",
+      "60f40ffb71e36355951576bf923dc21f614b8b34f55fbdceabd41c68e907f484"
     ],
     "providers": {
       "ministral-14b-2512": 5
     },
     "article_audit": [
       {
-        "id": "0f2631117dd9da7f831cd62188628b27600fd3265cb275a481bd0117df9ac741",
-        "published_at": "2026-10-31T05:20:42+00:00",
-        "fetched_at": "2026-10-31T16:42:18.265031+00:00",
-        "analyzed_at": "2026-10-31T16:42:25.122789+00:00",
+        "id": "b26124e5323d5d7b7f7d05007d156a52fd3438111d650113de6a6b60d33e0f36",
+        "published_at": "2026-11-01T16:51:19+00:00",
+        "fetched_at": "2026-11-01T17:31:23.835395+00:00",
+        "analyzed_at": "2026-11-01T17:32:09.442807+00:00",
+        "relevant": true,
+        "score": -1.0,
+        "provider": "ministral-14b-2512"
+      },
+      {
+        "id": "80e1c4e5d3dacfc939add9eedbf246b538ca1eb0bfa9f2009695e2659a079cf0",
+        "published_at": "2026-11-01T03:47:58+00:00",
+        "fetched_at": "2026-11-01T17:31:23.835395+00:00",
+        "analyzed_at": "2026-11-01T17:32:25.183962+00:00",
+        "relevant": true,
+        "score": -1.0,
+        "provider": "ministral-14b-2512"
+      },
+      {
+        "id": "5a14edbf094a33adebcc915762179bc4056d2b55357cfce6d7379905b0ea6c67",
+        "published_at": "2026-11-01T03:06:47+00:00",
+        "fetched_at": "2026-11-01T17:31:23.835395+00:00",
+        "analyzed_at": "2026-11-01T17:32:29.158730+00:00",
         "relevant": false,
         "score": null,
         "provider": "ministral-14b-2512"
       },
       {
-        "id": "89e292d0df6f0e9367bbe106c282ba40547d3d463170d71d04fdf13bc18e334c",
-        "published_at": "2026-10-31T00:02:52+00:00",
-        "fetched_at": "2026-10-31T16:42:18.265031+00:00",
-        "analyzed_at": "2026-10-31T16:42:28.446670+00:00",
-        "relevant": true,
-        "score": -1.0,
+        "id": "6613c080a0e70b3714bb15448d35e8cffa23acbc3ab069b89fbe7d54e438a593",
+        "published_at": "2026-10-31T19:39:38+00:00",
+        "fetched_at": "2026-11-01T17:31:23.835395+00:00",
+        "analyzed_at": "2026-11-01T17:32:32.676080+00:00",
+        "relevant": false,
+        "score": null,
         "provider": "ministral-14b-2512"
       },
       {
-        "id": "4ef2d5f483fe022dfa5072c06f225a6e2d34d7b8bff07af8fb4539b62da7182c",
-        "published_at": "2026-10-30T21:36:42+00:00",
-        "fetched_at": "2026-10-31T16:42:18.265031+00:00",
-        "analyzed_at": "2026-10-31T16:42:34.294450+00:00",
-        "relevant": true,
-        "score": -1.0,
-        "provider": "ministral-14b-2512"
-      },
-      {
-        "id": "c617063915d81bd444e582ec38b8335276fd480377a310ab66870fb78ce0a057",
-        "published_at": "2026-10-30T21:13:49+00:00",
-        "fetched_at": "2026-10-31T16:42:18.265031+00:00",
-        "analyzed_at": "2026-10-31T16:42:37.357868+00:00",
-        "relevant": true,
-        "score": -1.0,
-        "provider": "ministral-14b-2512"
-      },
-      {
-        "id": "421bfadea4da769774f7c21e815bd86e62d31053df4c87d204092f1f10092de3",
-        "published_at": "2026-10-30T20:41:47+00:00",
-        "fetched_at": "2026-10-31T16:42:18.265031+00:00",
-        "analyzed_at": "2026-10-31T16:42:40.177911+00:00",
+        "id": "60f40ffb71e36355951576bf923dc21f614b8b34f55fbdceabd41c68e907f484",
+        "published_at": "2026-10-31T11:55:00+00:00",
+        "fetched_at": "2026-11-01T17:31:23.835395+00:00",
+        "analyzed_at": "2026-11-01T17:32:36.100034+00:00",
         "relevant": true,
         "score": -1.0,
         "provider": "ministral-14b-2512"
@@ -95,13 +96,13 @@
   "news_reading": "El tono de las noticias coincide con la dirección de la tendencia; no aumenta por sí mismo la probabilidad del modelo.",
   "hybrid": {
     "version": "hybrid_scenario_v1",
-    "status": "applied_experimental",
+    "status": "blocked",
     "experimental": true,
     "validated": false,
-    "generated_at": "2026-10-31T16:42:42.591664+00:00",
+    "generated_at": "2026-11-01T17:32:38.847389+00:00",
     "base_origin": "2026-09-30",
     "target_month": "2026-10-31",
-    "news_as_of": "2026-10-31T16:42:42.528423+00:00",
+    "news_as_of": "2026-11-01T17:32:38.787257+00:00",
     "metal": "silver",
     "baseline_probabilities": {
       "Bajista": 0.6496156454086304,
@@ -109,27 +110,29 @@
       "Alcista": 0.25881829857826233
     },
     "hybrid_probabilities": {
-      "Bajista": 0.6806738412380219,
+      "Bajista": 0.6496156454086304,
       "Neutral": 0.0915660709142685,
-      "Alcista": 0.22776010274887085
+      "Alcista": 0.25881829857826233
     },
     "baseline_trend": "Bajista",
     "trend": "Bajista",
     "requested_weight": 0.15,
-    "applied_weight": 0.12,
+    "applied_weight": 0.0,
     "probability_changes": {
-      "Bajista": 0.03105819582939151,
+      "Bajista": 0.0,
       "Neutral": 0.0,
-      "Alcista": -0.031058195829391483
+      "Alcista": 0.0
     },
     "baseline_confidence": 0.6496156454086304,
-    "signal": "Esperar por riesgo alto",
+    "signal": "Abstenerse",
     "risk": "Alto",
     "decision_uses_hybrid": false,
     "reasons": [
-      "Lote completo y vigente: se aplica una hipótesis direccional acotada, sin cambiar la señal base."
+      "La predicción base no corresponde al mes objetivo actualmente vigente.",
+      "Las noticias no pertenecen a una lectura actual del mes objetivo."
     ],
     "baseline_reasons": [
+      "Predicción vencida o desactualizada: actualizar datos y reentrenar.",
       "Volatilidad anualizada de 12 retornos mensuales >= 30%.",
       "Caída desde máximo de 12 meses >= 15%."
     ],
@@ -142,11 +145,8 @@
       "max_snapshot_age_hours": 24,
       "formula": "h=(1-a)*p+a*q; a=peso*(relevantes/5)*abs(sentimiento)",
       "neutral_probability": "Se conserva la probabilidad Neutral del modelo base.",
-      "relevant_articles": 4,
-      "mean_sentiment": -1.0,
-      "relevant_coverage": 0.8,
-      "transferred_probability": 0.03105819582939148,
-      "score_semantics": "Interpretación contextual de un LLM (Mistral o Gemini) o, sin LLM, tono financiero de FinBERT; no efecto causal del precio."
+      "relevant_articles": 3,
+      "mean_sentiment": -1.0
     },
     "limitations": [
       "Escenario experimental con probabilidades orientativas: no fue entrenado ni validado temporalmente.",
