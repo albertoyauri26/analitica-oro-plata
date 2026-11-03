@@ -60,7 +60,7 @@ Si cualquier comprobación falla, o la API no responde, la página muestra la **
 
 Tokens medidos en los tres casos reales: 1 038, 1 079 y 1 056 por recomendación (entrada más salida), unos 106 000 tokens por cada 100 recomendaciones. En el plan gratuito *Experiment* de Mistral el costo es US$ 0 dentro de sus límites. Con el precio publicado por agregadores para `ministral-14b-2512` (US$ 0,20 por millón de tokens de entrada y de salida; verificar en mistral.ai/pricing), 100 recomendaciones costarían unos **US$ 0,02**.
 
-## Tres casos reales (15/10/2026, holdout y datos del sistema)
+## Tres casos reales (25/10/2026, holdout y datos del sistema)
 
 ### Caso 1 · Oro, perfil moderado
 
