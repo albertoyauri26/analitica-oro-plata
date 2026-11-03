@@ -66,6 +66,8 @@ Cada `git push` a `master` despliega una versión nueva. Si no ocurre, en Render
 
 `.github/workflows/actualizar-noticias.yml` se ejecuta todos los días a las 12:00 UTC (7:00 en Lima) y también a mano desde la pestaña **Actions → Actualizar noticias y predicción → Run workflow**. Descarga las noticias, las analiza con Mistral, recalcula la predicción y guarda `data/metals.sqlite` y las predicciones en el repositorio. Render despliega ese commit, así la página conserva los datos aunque la instancia gratuita se reinicie.
 
+`.github/workflows/reentrenar-modelos.yml` se ejecuta todos los días a las 14:00 UTC (9:00 en Lima) y a mano desde **Actions → Reentrenar modelos → Run workflow**. Descarga precios del Banco Mundial e indicadores de FRED; si el dataset cambió desde el último entrenamiento (en la práctica, cuando el Banco Mundial publica un mes nuevo, una vez al mes), reentrena los modelos de oro y plata, recalcula la predicción y guarda la base y `artifacts/gold` y `artifacts/silver`. Si no hay datos nuevos no guarda nada. Cada reentrenamiento cambia las métricas, el holdout y el backtesting. `ACTUALIZAR.cmd` sigue sirviendo para hacerlo a mano.
+
 Configuración única: en GitHub, **Settings → Secrets and variables → Actions → New repository secret**, nombre `MISTRAL_API_KEY` y como valor la clave de Mistral. Sin el secreto, el flujo guarda las noticias y deja su análisis pendiente.
 
 Antes de subir cambios propios, ejecutar `git pull` para traer los commits automáticos.

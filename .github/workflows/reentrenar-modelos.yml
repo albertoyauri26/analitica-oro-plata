@@ -1,0 +1,49 @@
+# Reentrenamiento automático: revisa a diario si el Banco Mundial publicó un mes nuevo de precios.
+# Si el dataset cambió desde el último entrenamiento, reentrena oro y plata, recalcula la predicción
+# y guarda base y modelos en el repositorio (Vercel y Render despliegan ese commit).
+# Si no hay datos nuevos no guarda nada. No usa secretos: no llama al LLM.
+name: Reentrenar modelos
+
+on:
+  schedule:
+    - cron: "0 14 * * *"  # todos los días a las 14:00 UTC (9:00 en Lima), después de las noticias
+  workflow_dispatch:       # también se puede ejecutar a mano desde la pestaña Actions
+
+permissions:
+  contents: write
+
+concurrency: actualizar-noticias  # misma cola que el flujo de noticias: nunca suben la base a la vez
+
+jobs:
+  reentrenar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: requirements-lock.txt
+      - run: pip install -r requirements-lock.txt
+      - name: Precios, macro y reentrenamiento si hay datos nuevos
+        id: modelo
+        run: |
+          set -o pipefail
+          python -m metals.cli ingest | tee ingesta.txt
+          grep -q "^World Bank: OK" ingesta.txt || echo "::warning::No se pudo descargar el Pink Sheet del Banco Mundial; se reintenta mañana."
+          # predict se niega a predecir si el dataset cambió desde el entrenamiento (mes nuevo o datos revisados).
+          if python -m metals.cli predict > /dev/null; then
+            echo "Sin datos nuevos: el modelo actual sigue vigente."
+          else
+            python -m metals.cli train
+            python -m metals.cli predict > /dev/null
+            echo "reentrenado=si" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Guardar modelos y base en el repositorio
+        if: steps.modelo.outputs.reentrenado == 'si'
+        run: |
+          git config user.name "albertoyauri26"
+          git config user.email "119146074+albertoyauri26@users.noreply.github.com"
+          git add data/metals.sqlite artifacts/gold artifacts/silver
+          git diff --cached --quiet || (git commit -m "Reentrenamiento automático con datos nuevos" && git push)
