@@ -87,4 +87,4 @@ flowchart TD
 - La vista de noticias muestra sentimiento real guardado, relevancia, evidencia literal, fecha y modelo. `gemini-check` comprueba acceso sin imprimir la clave. Si se interrumpe un lote, conserva los artículos completados y reanuda los pendientes.
 - La producción anual requiere importación verificable con fecha de disponibilidad. Se incluyen instrucciones y un esquema vacío, sin cifras inventadas.
 - Las métricas se calculan al entrenar. No hay precisión prometida ni rentabilidad estimada. “Abstenerse” es una salida válida del sistema.
-- El despliegue está preparado para hacerse **después de comprobar la aplicación local**, como parte de tu recorrido de aprendizaje.
+- El despliegue está preparado para hacerse después de comprobar la aplicación local, como parte de tu recorrido de aprendizaje.
