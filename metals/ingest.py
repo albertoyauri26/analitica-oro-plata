@@ -22,8 +22,11 @@ def session():
     s.mount("https://", HTTPAdapter(max_retries=Retry(total=2, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504])))
     return s
 
-def download(url, filename):
-    response = session().get(url, timeout=(10, 60))
+def download(url, filename, agent=None):
+    client = session()
+    if agent:
+        client.headers["User-Agent"] = agent
+    response = client.get(url, timeout=(10, 60))
     response.raise_for_status()
     body = response.content
     digest = hashlib.sha256(body).hexdigest()
@@ -89,7 +92,8 @@ def macro(conn, series_id, local_file=None):
     if series_id not in SERIES:
         raise ValueError("Serie no permitida")
     download_url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}&cosd={START}"
-    body, sha = (Path(local_file).read_bytes(), "") if local_file else download(download_url, f"{series_id}.csv")
+    # Desde GitHub Actions, FRED deja colgadas las peticiones con User-Agent propio y responde al estándar de urllib.
+    body, sha = (Path(local_file).read_bytes(), "") if local_file else download(download_url, f"{series_id}.csv", "Python-urllib/3.13")
     frame = pd.read_csv(io.BytesIO(body))
     if series_id not in frame or len(frame.columns) != 2:
         raise ValueError(f"CSV FRED inválido para {series_id}.")
