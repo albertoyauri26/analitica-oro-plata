@@ -1,6 +1,6 @@
 {
   "metal": "silver",
-  "generated_at": "2026-11-23T23:15:17.284227+00:00",
+  "generated_at": "2026-11-24T21:52:10.345376+00:00",
   "origin": "2026-10-31",
   "target_month": "2026-11-30",
   "source_price_month": "2026-09-30",
@@ -22,25 +22,36 @@
   "rules": "Heurística académica v1; no calibrada con pérdidas financieras.",
   "news_context": {
     "metal": "silver",
-    "as_of": "2026-11-23T23:15:17.225262+00:00",
+    "as_of": "2026-11-24T21:52:10.286102+00:00",
     "window_days": 31,
     "requested": 5,
     "selected": 5,
-    "analyzed": 0,
-    "relevant": 0,
-    "pending": 5,
+    "analyzed": 1,
+    "relevant": 1,
+    "pending": 4,
     "missing_articles": 0,
-    "mean_sentiment": null,
-    "tone": "Sin dato",
+    "mean_sentiment": -1.0,
+    "tone": "Negativo",
     "news_ids": [
+      "b509eda4fc28c8af706048e685ddf027454bbd017c95206680386d70d64557ad",
       "9e13b2d194734c1defd0d546bdc55db0c6ec8ba5aedb32159049c38c387d5e13",
       "f0b199c83e10b224dc24fc33263fd15693b0367fae6767ec7525a24bbfebdc99",
       "b6486a80081bb2f1f6575eaec62866be30796483e17d2f4416740d1bc39783cb",
-      "adc10a340c7e4c8d5b937cbb2e367a485956af219efacf8bd7fa176b59aab815",
-      "74bf00a8588ba20465524bf5745734ab60897b7e73a78cd695e12cee727af9cb"
+      "adc10a340c7e4c8d5b937cbb2e367a485956af219efacf8bd7fa176b59aab815"
     ],
-    "providers": {},
+    "providers": {
+      "ministral-14b-2512": 1
+    },
     "article_audit": [
+      {
+        "id": "b509eda4fc28c8af706048e685ddf027454bbd017c95206680386d70d64557ad",
+        "published_at": "2026-11-24T15:45:00+00:00",
+        "fetched_at": "2026-11-24T21:51:42.219398+00:00",
+        "analyzed_at": "2026-11-24T21:52:01.580955+00:00",
+        "relevant": true,
+        "score": -1.0,
+        "provider": "ministral-14b-2512"
+      },
       {
         "id": "9e13b2d194734c1defd0d546bdc55db0c6ec8ba5aedb32159049c38c387d5e13",
         "published_at": "2026-11-23T22:33:08+00:00",
@@ -76,30 +87,21 @@
         "relevant": null,
         "score": null,
         "provider": null
-      },
-      {
-        "id": "74bf00a8588ba20465524bf5745734ab60897b7e73a78cd695e12cee727af9cb",
-        "published_at": "2026-11-23T19:14:32+00:00",
-        "fetched_at": "2026-11-23T23:15:06.442664+00:00",
-        "analyzed_at": null,
-        "relevant": null,
-        "score": null,
-        "provider": null
       }
     ],
     "score_semantics": "Interpretación contextual de un LLM (Mistral o Gemini) o, sin LLM, tono financiero de FinBERT; no efecto causal del precio.",
     "role": "Contexto actual y escenario experimental separado; no modifica la predicción XGBoost evaluada."
   },
-  "news_reading": "Sin sentimiento relevante disponible para contrastar la tendencia.",
+  "news_reading": "El tono de las noticias coincide con la dirección de la tendencia; no aumenta por sí mismo la probabilidad del modelo. El lote todavía está incompleto.",
   "hybrid": {
     "version": "hybrid_scenario_v1",
     "status": "blocked",
     "experimental": true,
     "validated": false,
-    "generated_at": "2026-11-23T23:15:17.284522+00:00",
+    "generated_at": "2026-11-24T21:52:10.345613+00:00",
     "base_origin": "2026-10-31",
     "target_month": "2026-11-30",
-    "news_as_of": "2026-11-23T23:15:17.225262+00:00",
+    "news_as_of": "2026-11-24T21:52:10.286102+00:00",
     "metal": "silver",
     "baseline_probabilities": {
       "Bajista": 0.5940732955932617,
@@ -143,8 +145,8 @@
       "max_snapshot_age_hours": 24,
       "formula": "h=(1-a)*p+a*q; a=peso*(relevantes/5)*abs(sentimiento)",
       "neutral_probability": "Se conserva la probabilidad Neutral del modelo base.",
-      "relevant_articles": 0,
-      "mean_sentiment": null
+      "relevant_articles": 1,
+      "mean_sentiment": -1.0
     },
     "limitations": [
       "Escenario experimental con probabilidades orientativas: no fue entrenado ni validado temporalmente.",
@@ -154,6 +156,8 @@
       "Noticias recientes actualizan este escenario a su fecha de emisión; no modifican predicciones ni evaluaciones históricas.",
       "La mezcla no eleva la confianza de decisión ni cambia la señal o el riesgo base, incluso si cambia la tendencia mostrada."
     ],
-    "providers": []
+    "providers": [
+      "ministral-14b-2512"
+    ]
   }
 }

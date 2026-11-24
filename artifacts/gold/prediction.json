@@ -1,6 +1,6 @@
 {
   "metal": "gold",
-  "generated_at": "2026-11-23T23:15:17.219296+00:00",
+  "generated_at": "2026-11-24T21:52:10.280423+00:00",
   "origin": "2026-10-31",
   "target_month": "2026-11-30",
   "source_price_month": "2026-09-30",
@@ -24,27 +24,54 @@
   "rules": "Heurística académica v1; no calibrada con pérdidas financieras.",
   "news_context": {
     "metal": "gold",
-    "as_of": "2026-11-23T23:15:17.162443+00:00",
+    "as_of": "2026-11-24T21:52:10.225211+00:00",
     "window_days": 31,
     "requested": 5,
     "selected": 5,
-    "analyzed": 2,
-    "relevant": 1,
-    "pending": 3,
+    "analyzed": 4,
+    "relevant": 2,
+    "pending": 1,
     "missing_articles": 0,
-    "mean_sentiment": 0.5,
-    "tone": "Positivo",
+    "mean_sentiment": 0.0,
+    "tone": "Mixto / neutral",
     "news_ids": [
+      "b6c854dd4c5513d2d7cbd13126f7002c263a5fd07346e4cacac479fb08184a55",
+      "99f93a564a029869c2a44d59296a2fe0ef8de581252661197e125cfc04b362fb",
+      "a740fc03c6e96b2efd55b5cf5462ffdd6d4d990619263fb2dea02862da1e818f",
       "cc4c053abc84dde5bf543781e4d0914e6b83f8e714c56c254f0751d1cbe27f90",
-      "9c52b9173afbacc1ccb5c6f31f5ef1be5db92f663b0fceee610017a9c9243d4e",
-      "b5fb4e9e638dd0d508f91cb3656c7800dd1fb9373b83132a48b79306456d1267",
-      "1582f633ed835fe4f863b49f68c0b300976c3a407e0772f46a4f39a552775ff7",
-      "9ab1643b8eebaebcd5d6f78d42485dcb9e69fd59b6c73ff7ad7848f6403d9c1a"
+      "9c52b9173afbacc1ccb5c6f31f5ef1be5db92f663b0fceee610017a9c9243d4e"
     ],
     "providers": {
-      "ministral-14b-2512": 2
+      "ministral-14b-2512": 4
     },
     "article_audit": [
+      {
+        "id": "b6c854dd4c5513d2d7cbd13126f7002c263a5fd07346e4cacac479fb08184a55",
+        "published_at": "2026-11-24T15:47:22+00:00",
+        "fetched_at": "2026-11-24T21:51:42.219398+00:00",
+        "analyzed_at": "2026-11-24T21:51:58.152262+00:00",
+        "relevant": true,
+        "score": -0.5,
+        "provider": "ministral-14b-2512"
+      },
+      {
+        "id": "99f93a564a029869c2a44d59296a2fe0ef8de581252661197e125cfc04b362fb",
+        "published_at": "2026-11-24T15:15:53+00:00",
+        "fetched_at": "2026-11-24T21:51:42.219398+00:00",
+        "analyzed_at": null,
+        "relevant": null,
+        "score": null,
+        "provider": null
+      },
+      {
+        "id": "a740fc03c6e96b2efd55b5cf5462ffdd6d4d990619263fb2dea02862da1e818f",
+        "published_at": "2026-11-24T14:35:24+00:00",
+        "fetched_at": "2026-11-24T21:51:42.219398+00:00",
+        "analyzed_at": "2026-11-24T21:52:06.610772+00:00",
+        "relevant": false,
+        "score": null,
+        "provider": "ministral-14b-2512"
+      },
       {
         "id": "cc4c053abc84dde5bf543781e4d0914e6b83f8e714c56c254f0751d1cbe27f90",
         "published_at": "2026-11-23T22:43:02+00:00",
@@ -62,48 +89,21 @@
         "relevant": false,
         "score": null,
         "provider": "ministral-14b-2512"
-      },
-      {
-        "id": "b5fb4e9e638dd0d508f91cb3656c7800dd1fb9373b83132a48b79306456d1267",
-        "published_at": "2026-11-23T22:10:36+00:00",
-        "fetched_at": "2026-11-23T23:15:06.442664+00:00",
-        "analyzed_at": null,
-        "relevant": null,
-        "score": null,
-        "provider": null
-      },
-      {
-        "id": "1582f633ed835fe4f863b49f68c0b300976c3a407e0772f46a4f39a552775ff7",
-        "published_at": "2026-11-23T21:39:10+00:00",
-        "fetched_at": "2026-11-23T23:15:06.442664+00:00",
-        "analyzed_at": null,
-        "relevant": null,
-        "score": null,
-        "provider": null
-      },
-      {
-        "id": "9ab1643b8eebaebcd5d6f78d42485dcb9e69fd59b6c73ff7ad7848f6403d9c1a",
-        "published_at": "2026-11-23T21:04:00+00:00",
-        "fetched_at": "2026-11-23T23:15:06.442664+00:00",
-        "analyzed_at": null,
-        "relevant": null,
-        "score": null,
-        "provider": null
       }
     ],
     "score_semantics": "Interpretación contextual de un LLM (Mistral o Gemini) o, sin LLM, tono financiero de FinBERT; no efecto causal del precio.",
     "role": "Contexto actual y escenario experimental separado; no modifica la predicción XGBoost evaluada."
   },
-  "news_reading": "El tono de las noticias coincide con la dirección de la tendencia; no aumenta por sí mismo la probabilidad del modelo. El lote todavía está incompleto.",
+  "news_reading": "El contraste entre noticias y tendencia no es concluyente. El lote todavía está incompleto.",
   "hybrid": {
     "version": "hybrid_scenario_v1",
     "status": "blocked",
     "experimental": true,
     "validated": false,
-    "generated_at": "2026-11-23T23:15:17.221703+00:00",
+    "generated_at": "2026-11-24T21:52:10.282645+00:00",
     "base_origin": "2026-10-31",
     "target_month": "2026-11-30",
-    "news_as_of": "2026-11-23T23:15:17.162443+00:00",
+    "news_as_of": "2026-11-24T21:52:10.225211+00:00",
     "metal": "gold",
     "baseline_probabilities": {
       "Bajista": 0.24589113891124725,
@@ -149,8 +149,8 @@
       "max_snapshot_age_hours": 24,
       "formula": "h=(1-a)*p+a*q; a=peso*(relevantes/5)*abs(sentimiento)",
       "neutral_probability": "Se conserva la probabilidad Neutral del modelo base.",
-      "relevant_articles": 1,
-      "mean_sentiment": 0.5
+      "relevant_articles": 2,
+      "mean_sentiment": 0.0
     },
     "limitations": [
       "Escenario experimental con probabilidades orientativas: no fue entrenado ni validado temporalmente.",
